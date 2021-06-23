@@ -15,5 +15,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "jsalamander",
-  "license": "GPLv3"
+  "license": "GPLv3",
+  "engines": {
+    "node": "14.x"
+  }
 }
