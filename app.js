@@ -4,7 +4,7 @@ const poll = require("easy-polling");
 const axios = require("axios")
 const express = require('express')
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000;
 
 /**
 * get a new temporary email which can be used to register
