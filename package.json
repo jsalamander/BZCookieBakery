@@ -1,0 +1,19 @@
+{
+  "name": "BZ Cookie Eeater",
+  "version": "1.0.0",
+  "description": "Get free BZ cookies",
+  "main": "app.js",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "easy-polling": "^1.1.3",
+    "express": "^4.17.1",
+    "md5": "^2.3.0",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "jsalamander",
+  "license": "GPLv3"
+}
