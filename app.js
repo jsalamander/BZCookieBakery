@@ -3,7 +3,15 @@ const md5 = require('md5');
 const poll = require("easy-polling");
 const axios = require("axios")
 const express = require('express')
+const cors = require('cors')
+
+const corsOptions = {
+  origin: '*',
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+
 const app = express()
+app.use(cors())
 const port = process.env.PORT || 3000;
 
 /**
