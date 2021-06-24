@@ -225,11 +225,12 @@ async function redeemServiceTicket(url = "") {
 app.get('/', async (req, res) => {
         try {
                 const setCookieString = await fetchNewAuthenticationCookie()
-                const splitCookieHeaders = setCookie.splitCookiesString(test)
+                const splitCookieHeaders = setCookie.splitCookiesString(setCookieString)
                 const parsedCookies = setCookie.parse(splitCookieHeaders);
                 res.contentType('application/json');
                 res.json(parsedCookies)
-        } catch {
+        } catch(err) {
+                console.error(err)
                 res.status(418);
                 res.json({error: "I'm a teapot"})
         }
