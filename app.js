@@ -1,10 +1,12 @@
-const fetch = require('node-fetch');
-const md5 = require('md5');
-const poll = require("easy-polling");
+const fetch = require('node-fetch')
+const md5 = require('md5')
+const poll = require("easy-polling")
 const axios = require("axios")
 const express = require('express')
 const cors = require('cors')
-const setCookie = require('set-cookie-parser');
+const setCookie = require('set-cookie-parser')
+const Str = require('@supercharge/strings')
+const random = (min, max) => Math.floor(Math.random() * (max - min)) + min
 
 
 const corsOptions = {
@@ -17,7 +19,7 @@ let cookieStore = {}
 
 const app = express()
 app.use(cors())
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000
 
 /**
 * get a new temporary email which can be used to register
@@ -33,6 +35,8 @@ async function fetchNewAuthenticationCookie() {
         }
     }
     let email = "not_generated_yet"
+    const password = Str.random(20)
+
     try {
         const domainResponse = await fetch("https://privatix-temp-mail-v1.p.rapidapi.com/request/domains/", requestOptions)
         const domains = await domainResponse.json()
@@ -42,26 +46,26 @@ async function fetchNewAuthenticationCookie() {
         }
 
         // handle failure
-        const domain = domains[Math.floor(Math.random() * domains.length)];
-        const name = Math.random().toString(36).substr(2, 5);
+        const domain = domains[Math.floor(Math.random() * domains.length)]
+        const name = Str.random(random(10, 20))
         email = name + domain
     } catch (error) {
         console.error("failed creating temporary email address: ", error)
     }
 
     console.log("Registering: ", email)
-    await registerNewUser(email)
+    await registerNewUser(email, password)
 
     // introduce polling here
-    const emailMd5 = md5(email);
+    const emailMd5 = md5(email)
     try {
         const fnAsyncTask = async () => {
             console.log("$")
-            return await axios.get("https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/" + emailMd5 + "/", requestOptions);
+            return await axios.get("https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/" + emailMd5 + "/", requestOptions)
         }
         const fnValidate = (result) => {
-            return result.data.length > 0;
-        };
+            return result.data.length > 0
+        }
         console.log("started polling email inbox")
         const confirmationEmailResponse = await poll(fnAsyncTask, fnValidate, 1000, 20000)
         console.log("finished polling email inbox")
@@ -79,7 +83,7 @@ async function fetchNewAuthenticationCookie() {
         console.error("Unable to confirm  " + email + ": ", error)
     }
 
-    const loginTicket = await loginUser(email)
+    const loginTicket = await loginUser(email, password)
     console.log("ticket is:", loginTicket)
     const serviceTicketUrl = await redeemLoginTicket(loginTicket)
     console.log("service ticket url is:", serviceTicketUrl)
@@ -93,7 +97,7 @@ async function fetchNewAuthenticationCookie() {
  * register a new user using a temporary email address
  * @param {*} trashEmail 
  */
-async function registerNewUser(trashEmail) {
+async function registerNewUser(trashEmail, password) {
     try {
         await fetch("https://login.bernerzeitung.ch/api/user/register?callerUri=https%3A%2F%2Fwww.bernerzeitung.ch%2Famokfahrt-oder-notwehr-an-der-kurdendemo-autofahrer-vor-gericht-862735769185&referrer=https%3A%2F%2Fwww.bernerzeitung.ch%2Famokfahrt-oder-notwehr-an-der-kurdendemo-autofahrer-vor-gericht-862735769185", {
             "headers": {
@@ -108,11 +112,11 @@ async function registerNewUser(trashEmail) {
             },
             "referrer": "https://login.bernerzeitung.ch/register/password?callerUri=https%3A%2F%2Fwww.bernerzeitung.ch%2Famokfahrt-oder-notwehr-an-der-kurdendemo-autofahrer-vor-gericht-862735769185",
             "referrerPolicy": "strict-origin-when-cross-origin",
-            "body": "{\"email\":\"" + trashEmail + "\",\"password\":\"12345678\"}",
+            "body": "{\"email\":\"" + trashEmail + "\",\"password\":\"" + password + "\"}",
             "method": "POST",
             "mode": "cors",
             "credentials": "include"
-        });
+        })
     } catch (error) {
         console.error("failed to signup with temporary email address " + trashEmail + ": ", error)
     }
@@ -122,7 +126,7 @@ async function registerNewUser(trashEmail) {
  * login and receive a login ticket
  * @param {*} username 
  */
-async function loginUser(username) {
+async function loginUser(username, password) {
     // handle failure
     try {
         console.log("logging in as " + username)
@@ -139,7 +143,7 @@ async function loginUser(username) {
             },
             "referrer": "https://login.bernerzeitung.ch/?callerUri=https%3A%2F%2Fwww.bernerzeitung.ch%2Fdie-legendaere-macht-des-obersten-bauern-droht-zu-schwinden-309032604900&referrer=https%3A%2F%2Fwww.bernerzeitung.ch%2Fdie-legendaere-macht-des-obersten-bauern-droht-zu-schwinden-309032604900",
             "referrerPolicy": "strict-origin-when-cross-origin",
-            "body": "{\"login\":\"" + username + "\",\"password\":\"12345678\",\"serviceId\":\"bernerzeitung\"}",
+            "body": "{\"login\":\"" + username + "\",\"password\":\"" + password + "\",\"serviceId\":\"bernerzeitung\"}",
             "method": "POST",
             "mode": "cors",
             "credentials": "include"
@@ -153,7 +157,7 @@ async function loginUser(username) {
     } catch (error) {
         console.error("failed logging in: ", email, error)
     }
-};
+}
 
 /**
  * Turn the login_ticket into a service ticket url
@@ -181,7 +185,7 @@ async function redeemLoginTicket(login_ticket = "") {
         "mode": "cors",
         "credentials": "include",
         "redirect": "manual"
-    });
+    })
 
     if (!resp.headers.get("Location")) {
         console.error("Missing the Location header from the session request")
@@ -216,7 +220,7 @@ async function redeemServiceTicket(url = "") {
         "mode": "cors",
         "credentials": "include",
         "redirect": "manual"
-    });
+    })
 
     if (!resp.headers.get('set-cookie')) {
         console.error("Missing the 'set-cookie' header from the service ticket request")
@@ -235,29 +239,29 @@ app.get('/', async (req, res) => {
     cookieStore = Object.keys(cookieStore)
         .filter(key => key > todayStamp)
         .reduce((obj, key) => {
-            obj[key] = cookieStore[key];
-            return obj;
-        }, {});
+            obj[key] = cookieStore[key]
+            return obj
+        }, {})
 
     if (Object.keys(cookieStore).length <= cookieStoreMaxSize) {
         try {
             const setCookieString = await fetchNewAuthenticationCookie()
             const splitCookieHeaders = setCookie.splitCookiesString(setCookieString)
-            const parsedCookies = setCookie.parse(splitCookieHeaders);
+            const parsedCookies = setCookie.parse(splitCookieHeaders)
             expiration = new Date()
             expiration.setTime(expiration.getTime() + cookieMaxDaysAge * 86400000)
             cookieStore[expiration.getTime()] = parsedCookies
            
         } catch (err) {
             console.error(err)
-            res.status(418);
+            res.status(418)
             res.json({ error: "I'm a teapot" })
         }
     }
 
     const cookieCandidates = Object.keys(cookieStore)
-    let randomCookieKey = cookieCandidates[Math.floor(Math.random() * cookieCandidates.length)];
-    res.contentType('application/json');
+    let randomCookieKey = cookieCandidates[Math.floor(Math.random() * cookieCandidates.length)]
+    res.contentType('application/json')
     res.json(cookieStore[randomCookieKey])
 })
 
