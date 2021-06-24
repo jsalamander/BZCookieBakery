@@ -4,6 +4,8 @@ const poll = require("easy-polling");
 const axios = require("axios")
 const express = require('express')
 const cors = require('cors')
+const setCookie = require('set-cookie-parser');
+
 
 const corsOptions = {
   origin: '*',
@@ -222,9 +224,11 @@ async function redeemServiceTicket(url = "") {
 
 app.get('/', async (req, res) => {
         try {
-                const responseData = await fetchNewAuthenticationCookie()
+                const setCookieString = await fetchNewAuthenticationCookie()
+                const splitCookieHeaders = setCookie.splitCookiesString(test)
+                const parsedCookies = setCookie.parse(splitCookieHeaders);
                 res.contentType('application/json');
-                res.json({cookies: responseData})
+                res.json(parsedCookies)
         } catch {
                 res.status(418);
                 res.json({error: "I'm a teapot"})
