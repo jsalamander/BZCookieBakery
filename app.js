@@ -226,10 +226,10 @@ async function redeemServiceTicket(url = "") {
 }
 
 app.get('/', async (req, res) => {
-    const cookieMaxDaysAge = process.env.COOKIE_MAX_DAYS_AGE || 5
+    const cookieMaxDaysAge = parseInt(process.env.COOKIE_MAX_DAYS_AGE) || 5
     // that number should more or less ensure that we stay  in the
     // rapid api freemium model. Per se a cookie can  be used by multiple people at once
-    const cookieStoreMaxSize = process.env.COOKIE_STORE_MAX_SIZE || 15
+    const cookieStoreMaxSize = parseInt(process.env.COOKIE_STORE_MAX_SIZE) || 15
     
     const todayStamp = Date.now()
     cookieStore = Object.keys(cookieStore)
