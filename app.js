@@ -83,7 +83,11 @@ async function fetchNewAuthenticationCookie() {
             console.error("No confirmation url found in latest email")
         }
     } catch (error) {
-        console.error("Unable to confirm  " + email + ": ", error)
+        const message = "Unable to confirm  " + email + ": "
+        console.error(message, error)
+        res.status(502)
+        res.json({ "error": message })
+        return
     }
 
     const loginTicket = await loginUser(email, password)
