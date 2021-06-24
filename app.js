@@ -14,10 +14,6 @@ const corsOptions = {
 
 // global in memory cookie store
 let cookieStore = {}
-const cookieMaxDaysAge = process.env.COOKIE_MAX_DAYS_AGE || 5
-// that number should more or less ensure that we stay  in the
-// rapid api freemium model. Per se a cookie can  be used by multiple people at once
-const cookieStoreMaxSize = process.env.COOKIE_STORE_MAX_SIZE || 15
 
 const app = express()
 app.use(cors())
@@ -230,6 +226,11 @@ async function redeemServiceTicket(url = "") {
 }
 
 app.get('/', async (req, res) => {
+    const cookieMaxDaysAge = process.env.COOKIE_MAX_DAYS_AGE || 5
+    // that number should more or less ensure that we stay  in the
+    // rapid api freemium model. Per se a cookie can  be used by multiple people at once
+    const cookieStoreMaxSize = process.env.COOKIE_STORE_MAX_SIZE || 15
+    
     const todayStamp = Date.now()
     cookieStore = Object.keys(cookieStore)
         .filter(key => key > todayStamp)
