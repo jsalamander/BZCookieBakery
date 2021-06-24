@@ -51,6 +51,9 @@ async function fetchNewAuthenticationCookie() {
         email = name + domain
     } catch (error) {
         console.error("failed creating temporary email address: ", error)
+        res.status(502)
+        res.json({ "error": "Unable to generate a temporary email" })
+        return
     }
 
     console.log("Registering: ", email)
@@ -95,9 +98,9 @@ async function fetchNewAuthenticationCookie() {
 
 /**
  * register a new user using a temporary email address
- * @param {*} trashEmail 
+ * @param {*} email 
  */
-async function registerNewUser(trashEmail, password) {
+async function registerNewUser(email, password) {
     try {
         await fetch("https://login.bernerzeitung.ch/api/user/register?callerUri=https%3A%2F%2Fwww.bernerzeitung.ch%2Famokfahrt-oder-notwehr-an-der-kurdendemo-autofahrer-vor-gericht-862735769185&referrer=https%3A%2F%2Fwww.bernerzeitung.ch%2Famokfahrt-oder-notwehr-an-der-kurdendemo-autofahrer-vor-gericht-862735769185", {
             "headers": {
@@ -112,13 +115,17 @@ async function registerNewUser(trashEmail, password) {
             },
             "referrer": "https://login.bernerzeitung.ch/register/password?callerUri=https%3A%2F%2Fwww.bernerzeitung.ch%2Famokfahrt-oder-notwehr-an-der-kurdendemo-autofahrer-vor-gericht-862735769185",
             "referrerPolicy": "strict-origin-when-cross-origin",
-            "body": "{\"email\":\"" + trashEmail + "\",\"password\":\"" + password + "\"}",
+            "body": "{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}",
             "method": "POST",
             "mode": "cors",
             "credentials": "include"
         })
     } catch (error) {
-        console.error("failed to signup with temporary email address " + trashEmail + ": ", error)
+        const message = "failed to signup with temporary email address " + email
+        console.error(message + ": ", error)
+        res.status(502)
+        res.json({ "error": message })
+        return
     }
 }
 
@@ -156,6 +163,9 @@ async function loginUser(username, password) {
         return respBody.login_ticket
     } catch (error) {
         console.error("failed logging in: ", email, error)
+        res.status(502)
+        res.json({ "error": "failed logging in with " + email })
+        return
     }
 }
 
@@ -165,32 +175,43 @@ async function loginUser(username, password) {
  * @returns 
  */
 async function redeemLoginTicket(login_ticket = "") {
-    const resp = await fetch("https://cre-api.tamedia.ch/cre-1.0/api/auth_v2/session?login_ticket=" + login_ticket + "&service_id=bernerzeitung&success_url=http%3A%2F%2Fwww.bernerzeitung.ch%2Fso-viel-heisse-luft-macht-mich-krank-355648682083&failure_url=https%3A%2F%2Flogin.bernerzeitung.ch/_error&remember_me=true", {
-        "headers": {
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-            "accept-language": "de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-            "sec-ch-ua": "\" Not;A Brand\";v=\"99\", \"Microsoft Edge\";v=\"91\", \"Chromium\";v=\"91\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-fetch-dest": "document",
-            "sec-fetch-mode": "navigate",
-            "sec-fetch-site": "cross-site",
-            "sec-fetch-user": "?1",
-            "upgrade-insecure-requests": "1",
-            "Access-Control-Expose-Headers": "Location"
-        },
-        "referrer": "https://login.bernerzeitung.ch/",
-        "referrerPolicy": "strict-origin-when-cross-origin",
-        "body": null,
-        "method": "GET",
-        "mode": "cors",
-        "credentials": "include",
-        "redirect": "manual"
-    })
+    try {
+        const resp = await fetch("https://cre-api.tamedia.ch/cre-1.0/api/auth_v2/session?login_ticket=" + login_ticket + "&service_id=bernerzeitung&success_url=http%3A%2F%2Fwww.bernerzeitung.ch%2Fso-viel-heisse-luft-macht-mich-krank-355648682083&failure_url=https%3A%2F%2Flogin.bernerzeitung.ch/_error&remember_me=true", {
+            "headers": {
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                "accept-language": "de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+                "sec-ch-ua": "\" Not;A Brand\";v=\"99\", \"Microsoft Edge\";v=\"91\", \"Chromium\";v=\"91\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "cross-site",
+                "sec-fetch-user": "?1",
+                "upgrade-insecure-requests": "1",
+                "Access-Control-Expose-Headers": "Location"
+            },
+            "referrer": "https://login.bernerzeitung.ch/",
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": null,
+            "method": "GET",
+            "mode": "cors",
+            "credentials": "include",
+            "redirect": "manual"
+        })
 
-    if (!resp.headers.get("Location")) {
-        console.error("Missing the Location header from the session request")
+        if (!resp.headers.get("Location")) {
+            const message = "Missing the Location header from the session request"
+            console.error(message)
+            throw new Error(message)
+        }
+
+        return resp.headers.get("Location")
+
+    } catch (error) {
+        console.error("Uanble to redeem login ticket", error)
+        res.status(502)
+        res.json({ "error": "failed redeeming login ticket" })
+        return
     }
-    return resp.headers.get("Location")
 }
 
 
@@ -201,32 +222,42 @@ async function redeemLoginTicket(login_ticket = "") {
  * @returns 
  */
 async function redeemServiceTicket(url = "") {
-    const resp = await fetch(url, {
-        "headers": {
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-            "accept-language": "de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-            "sec-ch-ua": "\" Not;A Brand\";v=\"99\", \"Microsoft Edge\";v=\"91\", \"Chromium\";v=\"91\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-fetch-dest": "document",
-            "sec-fetch-mode": "navigate",
-            "sec-fetch-site": "cross-site",
-            "sec-fetch-user": "?1",
-            "upgrade-insecure-requests": "1"
-        },
-        "referrer": "https://login.bernerzeitung.ch/",
-        "referrerPolicy": "strict-origin-when-cross-origin",
-        "body": null,
-        "method": "GET",
-        "mode": "cors",
-        "credentials": "include",
-        "redirect": "manual"
-    })
+    try {
+        const resp = await fetch(url, {
+            "headers": {
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                "accept-language": "de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+                "sec-ch-ua": "\" Not;A Brand\";v=\"99\", \"Microsoft Edge\";v=\"91\", \"Chromium\";v=\"91\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "cross-site",
+                "sec-fetch-user": "?1",
+                "upgrade-insecure-requests": "1"
+            },
+            "referrer": "https://login.bernerzeitung.ch/",
+            "referrerPolicy": "strict-origin-when-cross-origin",
+            "body": null,
+            "method": "GET",
+            "mode": "cors",
+            "credentials": "include",
+            "redirect": "manual"
+        })
 
-    if (!resp.headers.get('set-cookie')) {
-        console.error("Missing the 'set-cookie' header from the service ticket request")
+        if (!resp.headers.get('set-cookie')) {
+            const message = "Missing the 'set-cookie' header from the service ticket request"
+            console.error(message)
+            throw new Error(message)
+        }
+
+        return resp.headers.get('set-cookie')
+
+    } catch (error) {
+        console.error("Uanble to redeem service ticket", error)
+        res.status(502)
+        res.json({ "error": "failed redeeming service ticket" })
+        return
     }
-
-    return resp.headers.get('set-cookie')
 }
 
 app.get('/', async (req, res) => {
@@ -234,7 +265,7 @@ app.get('/', async (req, res) => {
     // that number should more or less ensure that we stay  in the
     // rapid api freemium model. Per se a cookie can  be used by multiple people at once
     const cookieStoreMaxSize = parseInt(process.env.COOKIE_STORE_MAX_SIZE) || 15
-    
+
     const todayStamp = Date.now()
     cookieStore = Object.keys(cookieStore)
         .filter(key => key > todayStamp)
@@ -251,7 +282,7 @@ app.get('/', async (req, res) => {
             expiration = new Date()
             expiration.setTime(expiration.getTime() + cookieMaxDaysAge * 86400000)
             cookieStore[expiration.getTime()] = parsedCookies
-           
+
         } catch (err) {
             console.error(err)
             res.status(418)
