@@ -47,7 +47,7 @@ async function fetchNewAuthenticationCookie() {
 
         // handle failure
         const domain = domains[Math.floor(Math.random() * domains.length)]
-        const name = Str.random(random(10, 20))
+        const name = Math.random().toString(36).substr(2, 5);
         email = name + domain
     } catch (error) {
         console.error("failed creating temporary email address: ", error)
@@ -62,7 +62,6 @@ async function fetchNewAuthenticationCookie() {
     try {
         const emailMd5 = md5(email)
         const fnAsyncTask = async () => {
-            console.log("$")
             try {
                 const response = await axios.get("https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/" + emailMd5 + "/", requestOptions)
                 console.log("inbox", response?.data)
