@@ -63,9 +63,7 @@ async function fetchNewAuthenticationCookie() {
         const emailMd5 = md5(email)
         const fnAsyncTask = async () => {
             try {
-                const response = await axios.get("https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/" + emailMd5 + "/", requestOptions)
-                console.log("inbox", response?.data)
-                return response
+                return await axios.get("https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/" + emailMd5 + "/", requestOptions)
             } catch(error) {
                 console.error("inbox poll error for " + email, error)
                 return null
