@@ -59,20 +59,32 @@ async function fetchNewAuthenticationCookie() {
     console.log("Registering: ", email)
     await registerNewUser(email, password)
 
-    // introduce polling here
-    const emailMd5 = md5(email)
     try {
+        const emailMd5 = md5(email)
         const fnAsyncTask = async () => {
             console.log("$")
-            return await axios.get("https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/" + emailMd5 + "/", requestOptions)
+            try {
+                const response = await axios.get("https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/" + emailMd5 + "/", requestOptions)
+                console.log("inbox", response?.data)
+                return response
+            } catch(error) {
+                console.error("inbox poll error for " + email, error)
+                return null
+            }
         }
         const fnValidate = (result) => {
-            return result.data.length > 0
+            return result?.data?.length > 0
         }
         console.log("started polling email inbox")
         const confirmationEmailResponse = await poll(fnAsyncTask, fnValidate, 1000, 20000)
         console.log("finished polling email inbox")
-        const confirmationEmails = confirmationEmailResponse.data
+        const confirmationEmails = confirmationEmailResponse?.data
+        if (!confirmationEmails) {
+             res.status(502)
+             res.json({ "error": "Never received a confirmation email" })
+             return
+        }
+        
         const confirmUrlReg = /https:\/\/login\.bernerzeitung\.ch\/email\/activate\?token=([a-zA-Z0-9\~\!\@\#\$\%\^\&\*\(\)_\-\=\+\\\/\?\.\:\;\'\,]*)?/gm
         const emailText = confirmationEmails[0].mail_text
         const ulrs = emailText.match(confirmUrlReg)
