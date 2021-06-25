@@ -75,7 +75,7 @@ async function fetchNewAuthenticationCookie() {
             return result?.data?.length > 0
         }
         console.log("started polling email inbox")
-        const confirmationEmailResponse = await poll(fnAsyncTask, fnValidate, 1000, 20000)
+        const confirmationEmailResponse = await poll(fnAsyncTask, fnValidate, parseInt(process.env.POLL_FREQUENCY_MS) || 1000, parseInt(process.env.POLL_TIMEOUT_MS) || 20000)
         console.log("finished polling email inbox")
         const confirmationEmails = confirmationEmailResponse?.data
         if (!confirmationEmails) {
