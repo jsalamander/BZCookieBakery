@@ -1,3 +1,5 @@
+![GitHub](https://img.shields.io/github/license/jsalamander/BZCookieBakery)
+
 # BZCookieBakery
 Bake www.bernerzeitung.ch cookies which can be used to get around the paywall.
 
@@ -26,5 +28,6 @@ There are some env variables that mus be set.
 
 # Run It
 
-`node app.js`
-
+1. Clone this repository `git clone https://github.com/jsalamander/BZCookieBakery.git`
+2. Install the dependencies `npm i`
+3. Run it `node app.js`
