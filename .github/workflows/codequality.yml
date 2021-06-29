@@ -40,5 +40,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: jfriedli/bz-cookie-bakery :latest
+          tags: jfriedli/bz-cookie-bakery:latest
           file: container/Dockerfile
