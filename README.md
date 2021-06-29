@@ -1,7 +1,7 @@
 ![GitHub](https://img.shields.io/github/license/jsalamander/BZCookieBakery)
 
 # BZCookieBakery
-Bake www.bernerzeitung.ch cookies which can be used to get around the paywall.
+Bake www.bernerzeitung.ch cookies which can be used to get bypass the paywall with the accompanying browser extensions.
 
 This is the api for https://github.com/jsalamander/BZCookieBear
 
