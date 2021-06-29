@@ -19,6 +19,8 @@ There are some env variables that mus be set.
 
 ### Optional
 
+`PORT`: Default `3000` the port the express server listens on
+
 `COOKIE_STORE_MAX_SIZE`: Default `15` Defines how many cookies will be cached in RAM and randomly reused
 
 `COOKIE_MAX_DAYS_AGE`: Default `5` Defines how many days cookies remain valid in the cache
