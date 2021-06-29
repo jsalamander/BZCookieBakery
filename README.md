@@ -26,6 +26,8 @@ There are some env variables that mus be set.
 
 `POLL_TIMEOUT_MS`: Default `20000` Max Milliseconds for trying to poll the confirmation email
 
+`SENTRY_DSN`: Default `false` DSN of your Sentry host. If not set, Sentry is not activated
+
 # Run It
 
 1. Clone this repository `git clone https://github.com/jsalamander/BZCookieBakery.git`

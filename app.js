@@ -5,8 +5,17 @@ const axios = require("axios")
 const express = require('express')
 const cors = require('cors')
 const setCookie = require('set-cookie-parser')
+const Sentry = require("@sentry/node");
 const Str = require('@supercharge/strings')
 const random = (min, max) => Math.floor(Math.random() * (max - min)) + min
+
+if (process.env.SENTRY_DSN || false) {
+    Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+    });
+    console.log("Sentry is set up")
+}
+
 
 
 const corsOptions = {
@@ -64,7 +73,7 @@ async function fetchNewAuthenticationCookie() {
         const fnAsyncTask = async () => {
             try {
                 return await axios.get("https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/" + emailMd5 + "/", requestOptions)
-            } catch(error) {
+            } catch (error) {
                 console.error("inbox poll error for " + email, error)
                 return null
             }
@@ -77,11 +86,11 @@ async function fetchNewAuthenticationCookie() {
         console.log("finished polling email inbox")
         const confirmationEmails = confirmationEmailResponse?.data
         if (!confirmationEmails) {
-             res.status(502)
-             res.json({ "error": "Never received a confirmation email" })
-             return
+            res.status(502)
+            res.json({ "error": "Never received a confirmation email" })
+            return
         }
-        
+
         const confirmUrlReg = /https:\/\/login\.bernerzeitung\.ch\/email\/activate\?token=([a-zA-Z0-9\~\!\@\#\$\%\^\&\*\(\)_\-\=\+\\\/\?\.\:\;\'\,]*)?/gm
         const emailText = confirmationEmails[0].mail_text
         const ulrs = emailText.match(confirmUrlReg)
