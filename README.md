@@ -1,5 +1,6 @@
 ![Pipeline](https://github.com/jsalamander/BZCookieBakery/actions/workflows/codequality.yml/badge.svg)
 ![GitHub](https://img.shields.io/github/license/jsalamander/BZCookieBakery)
+![Docker Pulls](https://img.shields.io/docker/pulls/jfriedli/bz-cookie-bakery)
 
 # BZCookieBakery
 Bake www.bernerzeitung.ch cookies which can be used to get bypass the paywall with the accompanying browser extensions.
