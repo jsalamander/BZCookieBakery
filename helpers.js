@@ -148,13 +148,20 @@ async function redeemServiceTicket(url = '', res) {
       redirect: 'manual',
     });
 
-    if (!resp.headers.get('set-cookie')) {
+    const cresidStr = resp.headers.get('set-cookie');
+    if (!cresidStr) {
       const message = "Missing the 'set-cookie' header from the service ticket request";
       console.error(message);
       throw new Error(message);
     }
 
-    return resp.headers.get('set-cookie');
+    if (!cresidStr.includes('cresid')) {
+      const message = 'The auth cookies do not contain cresid';
+      console.error(message);
+      throw new Error(message);
+    }
+
+    return cresidStr;
   } catch (error) {
     Sentry.captureException(error);
     console.error('Uanble to redeem service ticket', error);
