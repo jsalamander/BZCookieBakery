@@ -1,3 +1,4 @@
+![Pipeline](https://github.com/jsalamander/BZCookieBakery/actions/workflows/codequality.yml/badge.svg)
 ![GitHub](https://img.shields.io/github/license/jsalamander/BZCookieBakery)
 
 # BZCookieBakery
