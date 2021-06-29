@@ -1,4 +1,5 @@
 const Sentry = require('@sentry/node');
+const fetch = require('node-fetch');
 
 /**
  * register a new user using a temporary email address
