@@ -6,16 +6,17 @@ const express = require('express')
 const cors = require('cors')
 const setCookie = require('set-cookie-parser')
 const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
 const Str = require('@supercharge/strings')
 const random = (min, max) => Math.floor(Math.random() * (max - min)) + min
 
 if (process.env.SENTRY_DSN || false) {
     Sentry.init({
         dsn: process.env.SENTRY_DSN,
+        tracesSampleRate: 1.0
     });
     console.log("Sentry is set up")
 }
-
 
 
 const corsOptions = {
@@ -60,6 +61,7 @@ async function fetchNewAuthenticationCookie() {
         email = name + domain
     } catch (error) {
         console.error("failed creating temporary email address: ", error)
+        Sentry.captureException(error);
         res.status(502)
         res.json({ "error": "Unable to generate a temporary email" })
         return
@@ -74,6 +76,7 @@ async function fetchNewAuthenticationCookie() {
             try {
                 return await axios.get("https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/" + emailMd5 + "/", requestOptions)
             } catch (error) {
+                Sentry.captureException(error);
                 console.error("inbox poll error for " + email, error)
                 return null
             }
@@ -103,6 +106,7 @@ async function fetchNewAuthenticationCookie() {
     } catch (error) {
         const message = "Unable to confirm  " + email + ": "
         console.error(message, error)
+        Sentry.captureException(error);
         res.status(502)
         res.json({ "error": message })
         return
@@ -143,6 +147,7 @@ async function registerNewUser(email, password) {
             "credentials": "include"
         })
     } catch (error) {
+        Sentry.captureException(error);
         const message = "failed to signup with temporary email address " + email
         console.error(message + ": ", error)
         res.status(502)
@@ -184,6 +189,7 @@ async function loginUser(username, password) {
 
         return respBody.login_ticket
     } catch (error) {
+        Sentry.captureException(error);
         console.error("failed logging in: ", email, error)
         res.status(502)
         res.json({ "error": "failed logging in with " + email })
@@ -229,6 +235,7 @@ async function redeemLoginTicket(login_ticket = "") {
         return resp.headers.get("Location")
 
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Uanble to redeem login ticket", error)
         res.status(502)
         res.json({ "error": "failed redeeming login ticket" })
@@ -275,6 +282,7 @@ async function redeemServiceTicket(url = "") {
         return resp.headers.get('set-cookie')
 
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Uanble to redeem service ticket", error)
         res.status(502)
         res.json({ "error": "failed redeeming service ticket" })
@@ -306,6 +314,7 @@ app.get('/', async (req, res) => {
             cookieStore[expiration.getTime()] = parsedCookies
 
         } catch (err) {
+            Sentry.captureException(err);
             console.error(err)
             res.status(418)
             res.json({ error: "I'm a teapot" })
