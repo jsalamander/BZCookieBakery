@@ -147,8 +147,6 @@ app.get('/', async (req, res) => {
     } catch (err) {
       Sentry.captureException(err);
       console.error(err);
-      res.status(418);
-      res.json({ error: "I'm a teapot" });
     }
   }
 
