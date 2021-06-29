@@ -64,7 +64,7 @@ async function fetchNewAuthenticationCookie(res) {
   }
 
   console.info('Registering: ', email);
-  await helpers.registerNewUser(email, password);
+  await helpers.registerNewUser(email, password, res);
 
   try {
     const emailMd5 = md5(email);
@@ -110,11 +110,11 @@ async function fetchNewAuthenticationCookie(res) {
     return;
   }
 
-  const loginTicket = await helpers.loginUser(email, password);
+  const loginTicket = await helpers.loginUser(email, password, res);
   console.info('ticket is:', loginTicket);
-  const serviceTicketUrl = await helpers.redeemLoginTicket(loginTicket);
+  const serviceTicketUrl = await helpers.redeemLoginTicket(loginTicket, res);
   console.info('service ticket url is:', serviceTicketUrl);
-  const authCookies = await helpers.redeemServiceTicket(serviceTicketUrl);
+  const authCookies = await helpers.redeemServiceTicket(serviceTicketUrl, res);
   console.info('auth cookies are:', authCookies);
 
   return authCookies;
