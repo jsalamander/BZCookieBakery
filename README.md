@@ -4,7 +4,7 @@
 <a href='https://de.freepik.com/fotos-vektoren-kostenlos/lebensmittel'>Lebensmittel Vektor erstellt von catalyststuff - de.freepik.com</a>
 
 
-![Pipeline](https://github.com/jsalamander/BZCookieBakery/actions/workflows/codequality.yml/badge.svg)
+![Pipeline](https://github.com/jsalamander/BZCookieBakery/actions/workflows/release.yml/badge.svg)
 ![GitHub](https://img.shields.io/github/license/jsalamander/BZCookieBakery)
 ![Docker Pulls](https://img.shields.io/docker/pulls/jfriedli/bz-cookie-bakery)
 
