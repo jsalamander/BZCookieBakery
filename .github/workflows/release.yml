@@ -1,4 +1,4 @@
-name: Check Code Quality
+name: Release
 
 on:
   push:
