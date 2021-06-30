@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jsalamander/BZCookieBakery/main/assets/cookies.png" alt="Cookies"/>
+</p>
+<a href='https://de.freepik.com/fotos-vektoren-kostenlos/lebensmittel'>Lebensmittel Vektor erstellt von catalyststuff - de.freepik.com</a>
+
 ![Pipeline](https://github.com/jsalamander/BZCookieBakery/actions/workflows/codequality.yml/badge.svg)
 ![GitHub](https://img.shields.io/github/license/jsalamander/BZCookieBakery)
 ![Docker Pulls](https://img.shields.io/docker/pulls/jfriedli/bz-cookie-bakery)
