@@ -37,6 +37,7 @@ jobs:
       -
         name: Build and push latest
         uses: docker/build-push-action@v2
+        if: ${{ github.ref == 'refs/heads/master' }}
         with:
           context: .
           push: true
@@ -45,6 +46,7 @@ jobs:
       -
         name: Build and push tag
         uses: docker/build-push-action@v2
+        if: ${{ startsWith('refs/tags/v', github.ref) }}
         with:
           context: .
           push: true
