@@ -1,5 +1,5 @@
-<p align="center" style="height: 20rem">
-  <img src="https://raw.githubusercontent.com/jsalamander/BZCookieBakery/main/assets/cookies.png" alt="Cookies"/>
+<p align="center" >
+  <img height="300rem" src="https://raw.githubusercontent.com/jsalamander/BZCookieBakery/main/assets/cookies.png" alt="Cookies"/>
 </p>
 <a href='https://de.freepik.com/fotos-vektoren-kostenlos/lebensmittel'>Lebensmittel Vektor erstellt von catalyststuff - de.freepik.com</a>
 
