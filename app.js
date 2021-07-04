@@ -152,7 +152,9 @@ app.get('/', async (req, res) => {
 
   const cookieCandidates = Object.keys(cookieStore);
   const randomCookieKey = cookieCandidates[Math.floor(Math.random() * cookieCandidates.length)];
-  res.json(cookieStore[randomCookieKey]);
+  if (await helpers.validateCookies(cookieStore[randomCookieKey], res)) {
+    res.json(cookieStore[randomCookieKey]);
+  }
 });
 
 app.listen(port, () => {

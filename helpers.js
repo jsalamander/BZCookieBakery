@@ -170,6 +170,47 @@ async function redeemServiceTicket(url = '', res) {
   }
 }
 
+/**
+ * Validate the cookies at the paywall check endpoint
+ * @param {*} cookies
+ * @param {*} res
+ * @returns
+ */
+async function validateCookies(cookies, res) {
+  let cookieHeader = '';
+  cookies.forEach((cookieObj) => {
+    cookieHeader += `${cookieObj.name}=${cookieObj.value}; `;
+  });
+  try {
+    const response = await fetch('https://www.bernerzeitung.ch/disco-api/v1/paywall/validate-session', {
+      headers: {
+        'content-type': 'application/json',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        cookie: cookieHeader,
+      },
+      method: 'POST',
+      mode: 'cors',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      Sentry.captureMessage(`Invalid Cookie detected -> ${cookieHeader}`);
+      res.status(502);
+      res.json({ error: 'Invalid Cookie detected' });
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    Sentry.captureException(error);
+    console.error('Unable to validate cookie', error, cookies);
+    res.status(502);
+    res.json({ error: 'Invalid Cookie detected' });
+    return false;
+  }
+}
+
 module.exports = {
-  registerNewUser, loginUser, redeemLoginTicket, redeemServiceTicket,
+  registerNewUser, loginUser, redeemLoginTicket, redeemServiceTicket, validateCookies,
 };
