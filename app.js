@@ -154,6 +154,8 @@ app.get('/', async (req, res) => {
   const randomCookieKey = cookieCandidates[Math.floor(Math.random() * cookieCandidates.length)];
   if (await helpers.validateCookies(cookieStore[randomCookieKey], res)) {
     res.json(cookieStore[randomCookieKey]);
+  } else {
+    delete cookieStore[randomCookieKey]
   }
 });
 
