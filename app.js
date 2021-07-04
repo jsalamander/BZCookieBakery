@@ -155,7 +155,7 @@ app.get('/', async (req, res) => {
   if (await helpers.validateCookies(cookieStore[randomCookieKey], res)) {
     res.json(cookieStore[randomCookieKey]);
   } else {
-    delete cookieStore[randomCookieKey]
+    delete cookieStore[randomCookieKey];
   }
 });
 
