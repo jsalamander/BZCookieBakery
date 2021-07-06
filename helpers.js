@@ -36,7 +36,7 @@ async function registerNewUser(email, password, res, domain) {
  * login and receive a login ticket
  * @param {*} username
  */
-async function loginUser(username, password, res, domain) {
+async function loginUser(username, password, res, domain, serviceId = 'bernerzeitung') {
   // handle failure
   try {
     console.info(`logging in as ${username}`);
@@ -51,7 +51,7 @@ async function loginUser(username, password, res, domain) {
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-origin',
       },
-      body: `{"login":"${username}","password":"${password}","serviceId":"bernerzeitung"}`,
+      body: `{"login":"${username}","password":"${password}","serviceId":"${serviceId}"}`,
       method: 'POST',
       mode: 'cors',
       credentials: 'include',

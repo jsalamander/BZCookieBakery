@@ -31,6 +31,16 @@ const port = process.env.PORT || 3000;
  * @returns authCookies
  */
 async function fetchNewAuthenticationCookie(res, domain) {
+  const getDomainWithoutSubdomain = (url) => {
+    const urlParts = new URL(url).hostname.split('.');
+
+    return urlParts
+      .slice(0)
+      .slice(-(urlParts.length === 4 ? 3 : 2))
+      .join('.');
+  };
+
+  const serviceId = getDomainWithoutSubdomain(domain);
   const requestOptions = {
     method: 'GET',
     headers: {
@@ -110,9 +120,9 @@ async function fetchNewAuthenticationCookie(res, domain) {
     return;
   }
 
-  const loginTicket = await helpers.loginUser(email, password, res, domain);
+  const loginTicket = await helpers.loginUser(email, password, res, domain, serviceId);
   console.info('ticket is:', loginTicket);
-  const serviceTicketUrl = await helpers.redeemLoginTicket(loginTicket, res);
+  const serviceTicketUrl = await helpers.redeemLoginTicket(loginTicket, res, serviceId);
   console.info('service ticket url is:', serviceTicketUrl);
   const authCookies = await helpers.redeemServiceTicket(serviceTicketUrl, res);
   console.info('auth cookies are:', authCookies);
@@ -128,6 +138,7 @@ app.get('/', async (req, res) => {
   const cookieStoreMaxSize = parseInt(process.env.COOKIE_STORE_MAX_SIZE, 10) || 15;
 
   const domain = req.query.hostname || 'www.bernerzeitung.ch';
+  console.info(`working for tamedia service: ${domain}`);
 
   if (!(domain in cookieStore)) {
     cookieStore[domain] = {};
