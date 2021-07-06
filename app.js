@@ -32,7 +32,7 @@ const port = process.env.PORT || 3000;
  */
 async function fetchNewAuthenticationCookie(res, domain) {
   const getDomainWithoutSubdomain = (url) => {
-    const urlParts = new URL("https://" + url).hostname.split('.');
+    const urlParts = new URL(`https://${url}`).hostname.split('.');
 
     return urlParts
       .slice(0)
@@ -41,7 +41,7 @@ async function fetchNewAuthenticationCookie(res, domain) {
   };
 
   domain = getDomainWithoutSubdomain(domain);
-  serviceId = domain.split(".")[0]
+  serviceId = domain.split('.')[0];
   const requestOptions = {
     method: 'GET',
     headers: {
@@ -103,7 +103,7 @@ async function fetchNewAuthenticationCookie(res, domain) {
     }
 
     /* eslint-disable-next-line no-useless-escape */
-    const confirmUrlReg = /https:\/\/login\.bernerzeitung\.ch\/email\/activate\?token=([a-zA-Z0-9\~\!\@\#\$\%\^\&\*\(\)_\-\=\+\\\/\?\.\:\;\'\,]*)?/gm;
+    const confirmUrlReg = `https:\\/\\/login\\.${domain.replace(/[-[\]{}()*+?.,\\^$|]/g, '\\$&')}\\/email\\/activate\\?token=([a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\_\\-\\=\\+\\\\\/\\?\\.\\:\\;\\'\\,]*)?`;
     const emailText = confirmationEmails[0].mail_text;
     const ulrs = emailText.match(confirmUrlReg);
     if (ulrs.length > 0) {
@@ -149,7 +149,7 @@ app.get('/', async (req, res) => {
     .filter((key) => key > todayStamp)
     .reduce((obj, key) => {
       /* eslint-disable-next-line no-param-reassign */
-      console.log("dd", key, obj, cookieStore)
+      console.log('dd', key, obj, cookieStore);
       obj[domain][key] = cookieStore[domain][key];
       return obj;
     }, {});
