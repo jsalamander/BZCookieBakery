@@ -63,9 +63,9 @@ async function fetchNewAuthenticationCookie(res, domain) {
     }
 
     // handle failure
-    const tempEmailomain = domains[Math.floor(Math.random() * domains.length)];
+    const tempEmailDomain = domains[Math.floor(Math.random() * domains.length)];
     const name = Math.random().toString(36).substr(2, 5);
-    email = name + tempEmailomain;
+    email = name + tempEmailDomain;
   } catch (error) {
     console.error('failed creating temporary email address: ', error);
     Sentry.captureException(error);
@@ -149,7 +149,6 @@ app.get('/', async (req, res) => {
     .filter((key) => key > todayStamp)
     .reduce((obj, key) => {
       /* eslint-disable-next-line no-param-reassign */
-      console.log('dd', key, obj, cookieStore);
       obj[domain][key] = cookieStore[domain][key];
       return obj;
     }, {});
