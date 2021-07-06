@@ -17,7 +17,7 @@ if (process.env.SENTRY_DSN || false) {
 }
 
 // global in memory cookie store
-let cookieStore = {};
+const cookieStore = {};
 
 const app = express();
 app.use(cors());
@@ -30,7 +30,7 @@ const port = process.env.PORT || 3000;
  } res
  * @returns authCookies
  */
-async function fetchNewAuthenticationCookie(res) {
+async function fetchNewAuthenticationCookie(res, domain) {
   const requestOptions = {
     method: 'GET',
     headers: {
@@ -52,9 +52,9 @@ async function fetchNewAuthenticationCookie(res) {
     }
 
     // handle failure
-    const domain = domains[Math.floor(Math.random() * domains.length)];
+    const tempEmailomain = domains[Math.floor(Math.random() * domains.length)];
     const name = Math.random().toString(36).substr(2, 5);
-    email = name + domain;
+    email = name + tempEmailomain;
   } catch (error) {
     console.error('failed creating temporary email address: ', error);
     Sentry.captureException(error);
@@ -64,7 +64,7 @@ async function fetchNewAuthenticationCookie(res) {
   }
 
   console.info('Registering: ', email);
-  await helpers.registerNewUser(email, password, res);
+  await helpers.registerNewUser(email, password, res, domain);
 
   try {
     const emailMd5 = md5(email);
@@ -110,7 +110,7 @@ async function fetchNewAuthenticationCookie(res) {
     return;
   }
 
-  const loginTicket = await helpers.loginUser(email, password, res);
+  const loginTicket = await helpers.loginUser(email, password, res, domain);
   console.info('ticket is:', loginTicket);
   const serviceTicketUrl = await helpers.redeemLoginTicket(loginTicket, res);
   console.info('service ticket url is:', serviceTicketUrl);
@@ -127,35 +127,40 @@ app.get('/', async (req, res) => {
   // rapid api freemium model. Per se a cookie can  be used by multiple people at once
   const cookieStoreMaxSize = parseInt(process.env.COOKIE_STORE_MAX_SIZE, 10) || 15;
 
+  const domain = req.query.hostname || 'www.bernerzeitung.ch';
+
+  if (!(domain in cookieStore)) {
+    cookieStore[domain] = {};
+  }
   const todayStamp = Date.now();
-  cookieStore = Object.keys(cookieStore)
+  cookieStore[domain] = Object.keys(cookieStore[domain])
     .filter((key) => key > todayStamp)
     .reduce((obj, key) => {
       /* eslint-disable-next-line no-param-reassign */
-      obj[key] = cookieStore[key];
+      obj[domain][key] = cookieStore[domain][key];
       return obj;
     }, {});
 
-  if (Object.keys(cookieStore).length <= cookieStoreMaxSize) {
+  if (Object.keys(cookieStore[domain]).length <= cookieStoreMaxSize) {
     try {
-      const setCookieString = await fetchNewAuthenticationCookie(res);
+      const setCookieString = await fetchNewAuthenticationCookie(res, domain);
       const splitCookieHeaders = setCookie.splitCookiesString(setCookieString);
       const parsedCookies = setCookie.parse(splitCookieHeaders);
       const expiration = new Date();
       expiration.setTime(expiration.getTime() + cookieMaxDaysAge * 86400000);
-      cookieStore[expiration.getTime()] = parsedCookies;
+      cookieStore[domain][expiration.getTime()] = parsedCookies;
     } catch (err) {
       Sentry.captureException(err);
       console.error(err);
     }
   }
 
-  const cookieCandidates = Object.keys(cookieStore);
+  const cookieCandidates = Object.keys(cookieStore[domain]);
   const randomCookieKey = cookieCandidates[Math.floor(Math.random() * cookieCandidates.length)];
-  if (await helpers.validateCookies(cookieStore[randomCookieKey], res)) {
-    res.json(cookieStore[randomCookieKey]);
+  if (await helpers.validateCookies(cookieStore[domain][randomCookieKey], res, domain)) {
+    res.json(cookieStore[domain][randomCookieKey]);
   } else {
-    delete cookieStore[randomCookieKey];
+    delete cookieStore[domain][randomCookieKey];
   }
 });
 

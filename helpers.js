@@ -5,9 +5,9 @@ const fetch = require('node-fetch');
  * register a new user using a temporary email address
  * @param {*} email, password, res
  */
-async function registerNewUser(email, password, res) {
+async function registerNewUser(email, password, res, domain) {
   try {
-    await fetch('https://login.bernerzeitung.ch/api/user/register?callerUri=https%3A%2F%2Fwww.bernerzeitung.ch%2Famokfahrt-oder-notwehr-an-der-kurdendemo-autofahrer-vor-gericht-862735769185&referrer=https%3A%2F%2Fwww.bernerzeitung.ch%2Famokfahrt-oder-notwehr-an-der-kurdendemo-autofahrer-vor-gericht-862735769185', {
+    await fetch(`https://login.${domain}/api/user/register`, {
       headers: {
         accept: '*/*',
         'accept-language': 'de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
@@ -18,8 +18,6 @@ async function registerNewUser(email, password, res) {
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-origin',
       },
-      referrer: 'https://login.bernerzeitung.ch/register/password?callerUri=https%3A%2F%2Fwww.bernerzeitung.ch%2Famokfahrt-oder-notwehr-an-der-kurdendemo-autofahrer-vor-gericht-862735769185',
-      referrerPolicy: 'strict-origin-when-cross-origin',
       body: `{"email":"${email}","password":"${password}"}`,
       method: 'POST',
       mode: 'cors',
@@ -38,11 +36,11 @@ async function registerNewUser(email, password, res) {
  * login and receive a login ticket
  * @param {*} username
  */
-async function loginUser(username, password, res) {
+async function loginUser(username, password, res, domain) {
   // handle failure
   try {
     console.info(`logging in as ${username}`);
-    const response = await fetch('https://login.bernerzeitung.ch/api/user/loginticket?callerUri=https%3A%2F%2Fwww.bernerzeitung.ch%2Fdie-legendaere-macht-des-obersten-bauern-droht-zu-schwinden-309032604900&referrer=https%3A%2F%2Fwww.bernerzeitung.ch%2Fdie-legendaere-macht-des-obersten-bauern-droht-zu-schwinden-309032604900', {
+    const response = await fetch(`https://login.${domain}/api/user/loginticket`, {
       headers: {
         accept: '*/*',
         'accept-language': 'de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
@@ -53,8 +51,6 @@ async function loginUser(username, password, res) {
         'sec-fetch-mode': 'cors',
         'sec-fetch-site': 'same-origin',
       },
-      referrer: 'https://login.bernerzeitung.ch/?callerUri=https%3A%2F%2Fwww.bernerzeitung.ch%2Fdie-legendaere-macht-des-obersten-bauern-droht-zu-schwinden-309032604900&referrer=https%3A%2F%2Fwww.bernerzeitung.ch%2Fdie-legendaere-macht-des-obersten-bauern-droht-zu-schwinden-309032604900',
-      referrerPolicy: 'strict-origin-when-cross-origin',
       body: `{"login":"${username}","password":"${password}","serviceId":"bernerzeitung"}`,
       method: 'POST',
       mode: 'cors',
@@ -77,12 +73,14 @@ async function loginUser(username, password, res) {
 
 /**
  * Turn the login_ticket into a service ticket url
- * @param {*} login_ticket
+ * @param {*} loginTicket
+ * @param {*} res
+ * @param {*} serviceId
  * @returns
  */
-async function redeemLoginTicket(loginTicket = '', res) {
+async function redeemLoginTicket(loginTicket = '', res, serviceId = 'bernerzeitung') {
   try {
-    const resp = await fetch(`https://cre-api.tamedia.ch/cre-1.0/api/auth_v2/session?login_ticket=${loginTicket}&service_id=bernerzeitung&success_url=http%3A%2F%2Fwww.bernerzeitung.ch%2Fso-viel-heisse-luft-macht-mich-krank-355648682083&failure_url=https%3A%2F%2Flogin.bernerzeitung.ch/_error&remember_me=true`, {
+    const resp = await fetch(`https://cre-api.tamedia.ch/cre-1.0/api/auth_v2/session?login_ticket=${loginTicket}&service_id=${serviceId}`, {
       headers: {
         accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         'accept-language': 'de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
@@ -95,8 +93,6 @@ async function redeemLoginTicket(loginTicket = '', res) {
         'upgrade-insecure-requests': '1',
         'Access-Control-Expose-Headers': 'Location',
       },
-      referrer: 'https://login.bernerzeitung.ch/',
-      referrerPolicy: 'strict-origin-when-cross-origin',
       body: null,
       method: 'GET',
       mode: 'cors',
@@ -139,8 +135,6 @@ async function redeemServiceTicket(url = '', res) {
         'sec-fetch-user': '?1',
         'upgrade-insecure-requests': '1',
       },
-      referrer: 'https://login.bernerzeitung.ch/',
-      referrerPolicy: 'strict-origin-when-cross-origin',
       body: null,
       method: 'GET',
       mode: 'cors',
@@ -176,13 +170,13 @@ async function redeemServiceTicket(url = '', res) {
  * @param {*} res
  * @returns
  */
-async function validateCookies(cookies, res) {
+async function validateCookies(cookies, res, domain) {
   let cookieHeader = '';
   cookies.forEach((cookieObj) => {
     cookieHeader += `${cookieObj.name}=${cookieObj.value}; `;
   });
   try {
-    const response = await fetch('https://www.bernerzeitung.ch/disco-api/v1/paywall/validate-session', {
+    const response = await fetch(`https://www.${domain}/disco-api/v1/paywall/validate-session`, {
       headers: {
         'content-type': 'application/json',
         'sec-fetch-dest': 'empty',
