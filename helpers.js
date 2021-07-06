@@ -80,7 +80,7 @@ async function loginUser(username, password, res, domain, serviceId = 'bernerzei
  */
 async function redeemLoginTicket(loginTicket = '', res, serviceId = 'bernerzeitung') {
   try {
-    const resp = await fetch(`https://cre-api.tamedia.ch/cre-1.0/api/auth_v2/session?login_ticket=${loginTicket}&service_id=${serviceId}`, {
+    const resp = await fetch(`https://cre-api.tamedia.ch/cre-1.0/api/auth_v2/session?login_ticket=${loginTicket}&service_id=${serviceId}&success_url=http%3A%2F%2Fwww.bernerzeitung.ch%2Fso-viel-heisse-luft-macht-mich-krank-355648682083&failure_url=https%3A%2F%2Flogin.bernerzeitung.ch/_error&remember_me=true`, {
       headers: {
         accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         'accept-language': 'de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
@@ -176,7 +176,7 @@ async function validateCookies(cookies, res, domain) {
     cookieHeader += `${cookieObj.name}=${cookieObj.value}; `;
   });
   try {
-    const response = await fetch(`https://www.${domain}/disco-api/v1/paywall/validate-session`, {
+    const response = await fetch(`https://${domain}/disco-api/v1/paywall/validate-session`, {
       headers: {
         'content-type': 'application/json',
         'sec-fetch-dest': 'empty',

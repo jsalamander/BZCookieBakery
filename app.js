@@ -32,7 +32,7 @@ const port = process.env.PORT || 3000;
  */
 async function fetchNewAuthenticationCookie(res, domain) {
   const getDomainWithoutSubdomain = (url) => {
-    const urlParts = new URL(url).hostname.split('.');
+    const urlParts = new URL("https://" + url).hostname.split('.');
 
     return urlParts
       .slice(0)
@@ -40,7 +40,8 @@ async function fetchNewAuthenticationCookie(res, domain) {
       .join('.');
   };
 
-  const serviceId = getDomainWithoutSubdomain(domain);
+  domain = getDomainWithoutSubdomain(domain);
+  serviceId = domain.split(".")[0]
   const requestOptions = {
     method: 'GET',
     headers: {
@@ -148,6 +149,7 @@ app.get('/', async (req, res) => {
     .filter((key) => key > todayStamp)
     .reduce((obj, key) => {
       /* eslint-disable-next-line no-param-reassign */
+      console.log("dd", key, obj, cookieStore)
       obj[domain][key] = cookieStore[domain][key];
       return obj;
     }, {});
