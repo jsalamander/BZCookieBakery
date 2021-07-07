@@ -9,17 +9,19 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/jfriedli/bz-cookie-bakery)
 
 # BZCookieBakery
-Bake www.bernerzeitung.ch cookies which can be used to get bypass the paywall with the accompanying browser extensions.
+Bake cookies which can be used to bypass the paywall of many Tamedia websites with the accompanying browser extensions.
+
+You'll find a list of the supported websites below
 
 This is the api for https://github.com/jsalamander/BZCookieBear
-
-Deployment: https://bz-cookie-bakery.herokuapp.com/ (Hosted on Heroku using Free Dynos which have to boot on the initial request)
 
 ## Container
 
 A container image is availabe on [DockerHub](https://hub.docker.com/r/jfriedli/bz-cookie-bakery/tags?page=1&ordering=last_updated)¨
 
 ## API Docs
+
+Domain: `https://bzcookie.fans/`
 
 ### Cookie Endpoint
 **Path**: `/`
