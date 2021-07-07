@@ -25,7 +25,9 @@ A container image is availabe on [DockerHub](https://hub.docker.com/r/jfriedli/b
 **Path**: `/`
 **Method**: `GET` 
 
-**Optional Query Parameter**: ``/?hostname=www.thunertagblatt.ch` Returns cookies for that specified page. Defaults to `www.bernerzeitung.ch`
+**Optional Query Parameter**:
+ `/?hostname=www.thunertagblatt.ch` Returns cookies for that specified page. Defaults to `www.bernerzeitung.ch`
+
 The `hostname` is accesible by the js variable `window.location.hostname` on the client's browser.
 
 List of supported `hostnames`
