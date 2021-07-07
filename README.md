@@ -9,15 +9,69 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/jfriedli/bz-cookie-bakery)
 
 # BZCookieBakery
-Bake www.bernerzeitung.ch cookies which can be used to get bypass the paywall with the accompanying browser extensions.
+Bake cookies which can be used to bypass the paywall of many Tamedia websites with the accompanying browser extensions.
+
+You'll find a list of the supported websites below
 
 This is the api for https://github.com/jsalamander/BZCookieBear
 
-Deployment: https://bz-cookie-bakery.herokuapp.com/ (Hosted on Heroku using Free Dynos which have to boot on the initial request)
-
 ## Container
 
-A container image is availabe on [DockerHub](https://hub.docker.com/r/jfriedli/bz-cookie-bakery/tags?page=1&ordering=last_updated)
+A container image is availabe on [DockerHub](https://hub.docker.com/r/jfriedli/bz-cookie-bakery/tags?page=1&ordering=last_updated)¨
+
+## API Docs
+
+Domain: https://bzcookie.fans/
+
+### Cookie Endpoint
+**Path**: `/`
+**Method**: `GET` 
+
+**Optional Query Parameter**:
+
+ `/?hostname=www.thunertagblatt.ch` Returns cookies for that specified page. Defaults to `www.bernerzeitung.ch`
+
+The `hostname` is accesible by the js variable `window.location.hostname` on the client's browser.
+
+List of supported `hostnames`
+
+* www.24heures.ch
+* www.bazonline.ch
+* www.berneroberlaender.ch
+* www.tagesanzeiger.ch
+* www.derbund.ch
+* www.landbote.ch
+* www.langenthalertagblatt.ch
+* www.zsz.ch
+* www.thunertagblatt.ch
+* www.tdg.ch
+* www.zuonline.ch
+
+
+**Example Response**
+```json
+[
+   {
+      "name":"creid",
+      "value":"1704611014491416240",
+      "expires":"2037-12-31T23:55:55.000Z",
+      "domain":"zsz.ch",
+      "path":"/",
+      "httpOnly":true,
+      "sameSite":"Lax"
+   },
+   {
+      "name":"cresid",
+      "value":"2840c0e4448b43cb783c3adc7fd9a707",
+      "expires":"2037-12-31T23:55:55.000Z",
+      "domain":".zsz.ch",
+      "path":"/",
+      "secure":true,
+      "httpOnly":true,
+      "sameSite":"None"
+   }
+]
+```
 
 ## Configuration
 
