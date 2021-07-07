@@ -31,17 +31,7 @@ const port = process.env.PORT || 3000;
  * @returns authCookies
  */
 async function fetchNewAuthenticationCookie(res, domain) {
-  const getDomainWithoutSubdomain = (url) => {
-    const urlParts = new URL(`https://${url}`).hostname.split('.');
-
-    return urlParts
-      .slice(0)
-      .slice(-(urlParts.length === 4 ? 3 : 2))
-      .join('.');
-  };
-
-  domain = getDomainWithoutSubdomain(domain);
-  serviceId = domain.split('.')[0];
+  const serviceId = domain.split('.')[0];
   const requestOptions = {
     method: 'GET',
     headers: {
@@ -149,13 +139,16 @@ app.get('/', async (req, res) => {
     .filter((key) => key > todayStamp)
     .reduce((obj, key) => {
       /* eslint-disable-next-line no-param-reassign */
-      obj[domain][key] = cookieStore[domain][key];
+      obj[key] = cookieStore[domain][key];
       return obj;
     }, {});
 
   if (Object.keys(cookieStore[domain]).length <= cookieStoreMaxSize) {
     try {
-      const setCookieString = await fetchNewAuthenticationCookie(res, domain);
+      const setCookieString = await fetchNewAuthenticationCookie(
+        res,
+        helpers.getDomainWithoutSubdomain(domain),
+      );
       const splitCookieHeaders = setCookie.splitCookiesString(setCookieString);
       const parsedCookies = setCookie.parse(splitCookieHeaders);
       const expiration = new Date();
