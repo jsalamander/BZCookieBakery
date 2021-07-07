@@ -21,7 +21,7 @@ A container image is availabe on [DockerHub](https://hub.docker.com/r/jfriedli/b
 
 ## API Docs
 
-Domain: `https://bzcookie.fans/`
+Domain: https://bzcookie.fans/
 
 ### Cookie Endpoint
 **Path**: `/`
