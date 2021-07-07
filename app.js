@@ -18,6 +18,18 @@ if (process.env.SENTRY_DSN || false) {
 
 // global in memory cookie store
 const cookieStore = {};
+const allowedHostnames = [
+  'www.24heures.ch',
+  'www.bazonline.ch',
+  'www.berneroberlaender.ch',
+  'www.tagesanzeiger.ch',
+  'www.derbund.ch',
+  'www.landbote.ch',
+  'www.langenthalertagblatt.ch',
+  'www.zsz.ch',
+  'www.thunertagblatt.ch',
+  'www.tdg.ch',
+];
 
 const app = express();
 app.use(cors());
@@ -129,6 +141,13 @@ app.get('/', async (req, res) => {
   const cookieStoreMaxSize = parseInt(process.env.COOKIE_STORE_MAX_SIZE, 10) || 15;
 
   const domain = req.query.hostname || 'www.bernerzeitung.ch';
+  if (!helpers.validateHostnameParam(domain, allowedHostnames)) {
+    res.status(400);
+    res.json({ error: 'Invalid hostname parameter', allowedHostnames });
+    Sentry.captureMessage(`Invalid hostname parameter -> ${domain}`);
+    return;
+  }
+
   console.info(`working for tamedia service: ${domain}`);
 
   if (!(domain in cookieStore)) {
