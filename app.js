@@ -19,6 +19,7 @@ if (process.env.SENTRY_DSN || false) {
 // global in memory cookie store
 const cookieStore = {};
 const allowedHostnames = [
+  'www.bernerzeitung.ch',
   'www.24heures.ch',
   'www.bazonline.ch',
   'www.berneroberlaender.ch',
