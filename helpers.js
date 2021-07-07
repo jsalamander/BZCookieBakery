@@ -217,6 +217,24 @@ const getDomainWithoutSubdomain = (url) => {
     .join('.');
 };
 
+/**
+ * check if the submitted hostname is allowed
+ * @param {*} hostname
+ * @param {*} hostnames
+ * @returns
+ */
+function validateHostnameParam(hostname = '', hostnames = []) {
+  if (!hostname) {
+    return false;
+  }
+
+  if (hostnames.includes(hostname)) {
+    return true;
+  }
+
+  return false;
+}
+
 module.exports = {
   registerNewUser,
   loginUser,
@@ -224,4 +242,5 @@ module.exports = {
   redeemServiceTicket,
   validateCookies,
   getDomainWithoutSubdomain,
+  validateHostnameParam,
 };
