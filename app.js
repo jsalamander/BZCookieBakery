@@ -30,6 +30,7 @@ const allowedHostnames = [
   'www.zsz.ch',
   'www.thunertagblatt.ch',
   'www.tdg.ch',
+  'www.zuonline.ch',
 ];
 
 const app = express();
