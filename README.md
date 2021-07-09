@@ -17,7 +17,7 @@ This is the api for https://github.com/jsalamander/BZCookieBear
 
 ## Container
 
-A container image is availabe on [DockerHub](https://hub.docker.com/r/jfriedli/bz-cookie-bakery/tags?page=1&ordering=last_updated)¨
+A container image is availabe on [DockerHub](https://hub.docker.com/r/jfriedli/bz-cookie-bakery/tags?page=1&ordering=last_updated)
 
 ## API Docs
 
