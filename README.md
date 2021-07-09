@@ -34,7 +34,7 @@ Domain: https://bzcookie.fans/
 The `hostname` is accesible by the js variable `window.location.hostname` on the client's browser.
 
 List of supported `hostnames`
-
+* www.bernerzeitung.ch
 * www.24heures.ch
 * www.bazonline.ch
 * www.berneroberlaender.ch
