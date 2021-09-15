@@ -21,7 +21,7 @@ A container image is availabe on [DockerHub](https://hub.docker.com/r/jfriedli/b
 
 ## API Docs
 
-Domain: https://bzcookie.fans/
+Domain: https://www.bzcookie.fans/ (note due to Heroku and bad DNS provider only a subdomain works)
 
 ### Cookie Endpoint
 **Path**: `/`
