@@ -1,246 +1,244 @@
 const Sentry = require('@sentry/node');
 const fetch = require('node-fetch');
+const puppeteer = require('puppeteer');
+const Str = require('@supercharge/strings');
+const md5 = require('md5');
+const poll = require('easy-polling');
+const axios = require('axios');
 
-/**
- * register a new user using a temporary email address
- * @param {*} email, password, res
- */
-async function registerNewUser(email, password, res, domain) {
-  try {
-    await fetch(`https://login.${domain}/api/user/register`, {
-      headers: {
-        accept: '*/*',
-        'accept-language': 'de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-        'content-type': 'application/json',
-        'sec-ch-ua': '" Not;A Brand";v="99", "Microsoft Edge";v="91", "Chromium";v="91"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-      },
-      body: `{"email":"${email}","password":"${password}"}`,
-      method: 'POST',
-      mode: 'cors',
-      credentials: 'include',
-    });
-  } catch (error) {
-    Sentry.captureException(error);
-    const message = `failed to signup with temporary email address ${email}`;
-    console.error(`${message}: `, error);
-    res.status(502);
-    res.json({ error: message });
-  }
-}
+const puppeteerTimeout = parseInt(process.env.PUPPETEER_TIMOUT, 10) || 10000;
+const emailInputSelector = '#email';
+const nextBtnSelector = '#first-step-continue-btn';
+const passwordInputSelector = 'input[type=password]';
+const submitPasswordBtnSelector = '#native-register-btn';
+const submitLoginBtnSelector = '#native-login-btn';
+const profileUrl = 'https://profile.onelog.ch/';
+const visibleSelectorOption = { visible: true };
 
-/**
- * login and receive a login ticket
- * @param {*} username
- */
-async function loginUser(username, password, res, domain, serviceId = 'bernerzeitung') {
-  // handle failure
-  try {
-    console.info(`logging in as ${username}`);
-    const response = await fetch(`https://login.${domain}/api/user/loginticket`, {
-      headers: {
-        accept: '*/*',
-        'accept-language': 'de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-        'content-type': 'application/json',
-        'sec-ch-ua': '" Not;A Brand";v="99", "Microsoft Edge";v="91", "Chromium";v="91"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-      },
-      body: `{"login":"${username}","password":"${password}","serviceId":"${serviceId}"}`,
-      method: 'POST',
-      mode: 'cors',
-      credentials: 'include',
-    });
-    const respBody = await response.json();
-    if (!('login_ticket' in respBody)) {
-      console.error('Missing the login_ticket from the login post request');
-    }
+// Google analytics cookie name parts, we don't want to track
+const forbiddenCookienameParts = ['_gat', '_ga', '_gid'];
 
-    /* eslint-disable-next-line camelcase */
-    return respBody.login_ticket;
-  } catch (error) {
-    Sentry.captureException(error);
-    console.error('failed logging in: ', username, error);
-    res.status(502);
-    res.json({ error: `failed logging in with ${username}` });
-  }
-}
-
-/**
- * Turn the login_ticket into a service ticket url
- * @param {*} loginTicket
- * @param {*} res
- * @param {*} serviceId
- * @returns
- */
-async function redeemLoginTicket(loginTicket = '', res, serviceId = 'bernerzeitung') {
-  try {
-    const resp = await fetch(
-      `https://cre-api.tamedia.ch/cre-1.0/api/auth_v2/session?login_ticket=${loginTicket}&service_id=${serviceId}&success_url=http%3A%2F%2Fwww.bernerzeitung.ch%2Fso-viel-heisse-luft-macht-mich-krank-355648682083&failure_url=https%3A%2F%2Flogin.bernerzeitung.ch/_error&remember_me=true`,
-      {
-        headers: {
-          accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-          'accept-language': 'de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-          'sec-ch-ua': '" Not;A Brand";v="99", "Microsoft Edge";v="91", "Chromium";v="91"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-fetch-dest': 'document',
-          'sec-fetch-mode': 'navigate',
-          'sec-fetch-site': 'cross-site',
-          'sec-fetch-user': '?1',
-          'upgrade-insecure-requests': '1',
-          'Access-Control-Expose-Headers': 'Location',
-        },
-        body: null,
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'include',
-        redirect: 'manual',
-      },
-    );
-
-    if (!resp.headers.get('Location')) {
-      const message = 'Missing the Location header from the session request';
-      console.error(message);
-      throw new Error(message);
-    }
-
-    return resp.headers.get('Location');
-  } catch (error) {
-    Sentry.captureException(error);
-    console.error('Uanble to redeem login ticket', error);
-    res.status(502);
-    res.json({ error: 'failed redeeming login ticket' });
-  }
-}
-
-/**
- * redeem the service ticket and receive the global
- * authentication cookie "cresid"
- * @param {*} url Url to fetch the cresid cookie from
- * @returns
- */
-async function redeemServiceTicket(url = '', res) {
-  try {
-    const resp = await fetch(url, {
-      headers: {
-        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'accept-language': 'de,de-DE;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-        'sec-ch-ua': '" Not;A Brand";v="99", "Microsoft Edge";v="91", "Chromium";v="91"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-fetch-dest': 'document',
-        'sec-fetch-mode': 'navigate',
-        'sec-fetch-site': 'cross-site',
-        'sec-fetch-user': '?1',
-        'upgrade-insecure-requests': '1',
-      },
-      body: null,
-      method: 'GET',
-      mode: 'cors',
-      credentials: 'include',
-      redirect: 'manual',
-    });
-
-    const cresidStr = resp.headers.get('set-cookie');
-    if (!cresidStr) {
-      const message = "Missing the 'set-cookie' header from the service ticket request";
-      console.error(message);
-      throw new Error(message);
-    }
-
-    if (!cresidStr.includes('cresid')) {
-      const message = 'The auth cookies do not contain cresid';
-      console.error(message);
-      throw new Error(message);
-    }
-
-    return cresidStr;
-  } catch (error) {
-    Sentry.captureException(error);
-    console.error('Uanble to redeem service ticket', error);
-    res.status(502);
-    res.json({ error: 'failed redeeming service ticket' });
-  }
-}
-
-/**
- * Validate the cookies at the paywall check endpoint
- * @param {*} cookies
- * @param {*} res
- * @returns
- */
-async function validateCookies(cookies, res, domain) {
-  let cookieHeader = '';
-  cookies.forEach((cookieObj) => {
-    cookieHeader += `${cookieObj.name}=${cookieObj.value}; `;
-  });
-  try {
-    const response = await fetch(`https://${domain}/disco-api/v1/paywall/validate-session`, {
-      headers: {
-        'content-type': 'application/json',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        cookie: cookieHeader,
-      },
-      method: 'POST',
-      mode: 'cors',
-      credentials: 'include',
-    });
-    if (!response.ok) {
-      Sentry.captureMessage(`Invalid Cookie detected -> ${cookieHeader}`);
-      res.status(502);
-      res.json({ error: 'Invalid Cookie detected' });
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    Sentry.captureException(error);
-    console.error('Unable to validate cookie', error, cookies);
-    res.status(502);
-    res.json({ error: 'Invalid Cookie detected' });
-    return false;
-  }
-}
-
-const getDomainWithoutSubdomain = (url) => {
-  const urlParts = new URL(`https://${url}`).hostname.split('.');
-
-  return urlParts
-    .slice(0)
-    .slice(-(urlParts.length === 4 ? 3 : 2))
-    .join('.');
+const requestOptions = {
+  method: 'GET',
+  headers: {
+    'x-rapidapi-key': process.env.RAPID_API_KEY || 'NOT_SET_API-KEY',
+    'x-rapidapi-host': 'privatix-temp-mail-v1.p.rapidapi.com',
+    useQueryString: true,
+  },
 };
 
 /**
- * check if the submitted hostname is allowed
- * @param {*} hostname
- * @param {*} hostnames
+ * register a new account using the provided credentials
+ * The registration process will be done using puppeteer
+ * @param {*} email
+ * @param {*} password
+ */
+async function registerAccount(email, password) {
+  const browser = await puppeteer.launch({ headless: process.env.NODE_ENV === 'production' });
+  const page = await browser.newPage();
+  page.setDefaultTimeout(puppeteerTimeout);
+
+  await page.goto(profileUrl);
+  await page.waitForSelector(emailInputSelector, visibleSelectorOption);
+
+  await page.type(emailInputSelector, email);
+
+  await page.waitForSelector(nextBtnSelector, visibleSelectorOption);
+  await Promise.all([
+    page.waitForNavigation(),
+    page.click(nextBtnSelector),
+  ]);
+
+  await page.waitForSelector(passwordInputSelector, visibleSelectorOption);
+  await page.type(passwordInputSelector, password);
+
+  await Promise.all([
+    page.waitForNavigation(),
+    page.click(submitPasswordBtnSelector),
+  ]);
+  await browser.close();
+}
+
+/**
+ * Visit confirm url and login to receieve cookies
+ * @param {*} confirmUrl
+ * @param {*} email
+ * @param {*} password
  * @returns
  */
-function validateHostnameParam(hostname = '', hostnames = []) {
-  if (!hostname) {
-    return false;
+async function confirmAccount(confirmUrl, email, password) {
+  const browser = await puppeteer.launch({ headless: false });
+  const page = await browser.newPage();
+  page.setDefaultTimeout(puppeteerTimeout);
+
+  await page.goto(confirmUrl);
+  await page.goto(profileUrl);
+
+  await page.waitForSelector(emailInputSelector, visibleSelectorOption);
+  await page.type(emailInputSelector, email);
+
+  await Promise.all([
+    page.waitForNavigation(),
+    page.click(nextBtnSelector),
+  ]);
+
+  await page.waitForSelector(passwordInputSelector, visibleSelectorOption);
+  await page.type(passwordInputSelector, password);
+
+  await Promise.all([
+    page.waitForNavigation(),
+    page.click(submitLoginBtnSelector),
+  ]);
+
+  await page.waitForFunction(
+    `document.querySelector("body").innerText.includes("${email}")`,
+  );
+
+  const cookies = await page.cookies();
+  await browser.close();
+  return cookies;
+}
+
+/**
+ * generate a new email account
+ * @returns
+ */
+async function getNewEmailAccount() {
+  try {
+    const domainResponse = await fetch('https://privatix-temp-mail-v1.p.rapidapi.com/request/domains/', requestOptions);
+    const domains = await domainResponse.json();
+
+    if (domains.length <= 0) {
+      throw new Error('RapidAPI returned zero email domains');
+    }
+
+    const tempEmailDomain = domains[Math.floor(Math.random() * domains.length)];
+    const name = Math.random().toString(36).substr(2, 5);
+    const email = name + tempEmailDomain;
+
+    // satisfy formal password requirements
+    const password = `Aa1${Str.random(20)}`;
+    return { email, password };
+  } catch (error) {
+    throw new Error(`Unable to fetch email domain list with: ${error}`);
+  }
+}
+
+/**
+ * confirm the email address and therefore the account
+ * @param {*} email
+ * @returns
+ */
+async function receiveConfirmationEmail(email) {
+  const emailMd5 = md5(email);
+  const fnAsyncTask = async () => {
+    try {
+      return await axios.get(`https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/${emailMd5}/`, requestOptions);
+    } catch (error) {
+      Sentry.captureException(error);
+      return null;
+    }
+  };
+  const fnValidate = (result) => result?.data?.length > 0;
+  const confirmationEmailResponse = await poll(
+    fnAsyncTask,
+    fnValidate,
+    parseInt(process.env.POLL_FREQUENCY_MS, 10) || 1000,
+    parseInt(process.env.POLL_TIMEOUT_MS, 10) || 20000,
+  );
+  const confirmationEmails = confirmationEmailResponse?.data;
+  if (!confirmationEmails) {
+    throw new Error('Never received a confirmation email');
   }
 
-  if (hostnames.includes(hostname)) {
-    return true;
+  /* eslint-disable-next-line no-useless-escape */
+  const confirmUrlReg = /\[https:\/\/id\.onelog\.ch\/native\/email-verification(.*?)\]/g;
+  const emailText = confirmationEmails[0].mail_text;
+  const urls = emailText.match(confirmUrlReg);
+  if (urls.length > 0) {
+    const confirmUrl = urls[0].replace('[', '').replace(']', '');
+    return confirmUrl;
+  }
+  throw new Error('No confirmation url found in latest email');
+}
+
+/**
+ * Filter out all nasty Goggle Analytics cookies
+ * @param {*} cookies
+ */
+function filterCookies(cookies) {
+  return cookies?.filter((cookie) => !forbiddenCookienameParts.some(
+    (forbiddenCookieNamePart) => cookie?.name.includes(forbiddenCookieNamePart),
+  ));
+}
+
+/**
+ * try to register and retrieve a onelog.ch cookie
+ */
+async function popluateCookies() {
+  let emailCreds = {};
+  try {
+    emailCreds = await getNewEmailAccount();
+  } catch (error) {
+    Sentry.captureException(error);
+    throw new Error('failed creating temporary email address: ', error);
   }
 
-  return false;
+  try {
+    await registerAccount(emailCreds.email, emailCreds.password);
+  } catch (error) {
+    Sentry.captureException(error);
+    throw new Error('failed registering account on onelog: ', error);
+  }
+
+  let confirmUrl = null;
+  try {
+    confirmUrl = await receiveConfirmationEmail(emailCreds.email);
+    if (confirmUrl?.length < 1) {
+      throw new Error(`Got invalid confirm Url from email: ${confirmUrl}`);
+    }
+  } catch (error) {
+    Sentry.captureException(error);
+    throw new Error(`Unable to confirm  ${emailCreds.email}: `, error);
+  }
+
+  try {
+    const cookies = await confirmAccount(
+      confirmUrl,
+      emailCreds.email,
+      emailCreds.password,
+    );
+    console.log('cc', cookies);
+    return filterCookies(cookies);
+  } catch (error) {
+    Sentry.captureException(error);
+    throw new Error(`Unable to confirm  ${emailCreds.email}: `, error);
+  }
+}
+
+async function bakeCookies(cookieStore, log) {
+  const tmpCookieStore = { ...cookieStore };
+  let triesCounter = 0;
+  const maxRetries = parseInt(process.env.BAKERY_RETIRES, 10) || 3;
+  while (triesCounter < maxRetries) {
+    log.info(`bakery try #${triesCounter}`);
+    try {
+      /* eslint-disable-next-line no-await-in-loop */
+      const cookies = await popluateCookies();
+      console.log('cc2', cookies);
+      const expiration = new Date();
+      const cookieMaxDaysAge = parseInt(process.env.COOKIE_MAX_DAYS_AGE, 10) || 5;
+      expiration.setTime(expiration.getTime() + cookieMaxDaysAge * 86400000);
+      tmpCookieStore[expiration.getTime()] = cookies;
+      log.info('successfully fetched account cookies');
+      return tmpCookieStore;
+    } catch (err) {
+      log.warn(`Fetching cookies failed at try ${triesCounter} with ${err}`);
+    }
+    triesCounter += 1;
+  }
 }
 
 module.exports = {
-  registerNewUser,
-  loginUser,
-  redeemLoginTicket,
-  redeemServiceTicket,
-  validateCookies,
-  getDomainWithoutSubdomain,
-  validateHostnameParam,
+  bakeCookies,
 };

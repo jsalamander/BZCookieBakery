@@ -27,48 +27,37 @@ Domain: https://www.bzcookie.fans/ (note due to Heroku and bad DNS provider only
 **Path**: `/`
 **Method**: `GET` 
 
-**Optional Query Parameter**:
-
- `/?hostname=www.thunertagblatt.ch` Returns cookies for that specified page. Defaults to `www.bernerzeitung.ch`
-
-The `hostname` is accesible by the js variable `window.location.hostname` on the client's browser.
-
-List of supported `hostnames`
-* www.bernerzeitung.ch
-* www.24heures.ch
-* www.bazonline.ch
-* www.berneroberlaender.ch
-* www.tagesanzeiger.ch
-* www.derbund.ch
-* www.landbote.ch
-* www.langenthalertagblatt.ch
-* www.zsz.ch
-* www.thunertagblatt.ch
-* www.tdg.ch
-* www.zuonline.ch
-
-
 **Example Response**
 ```json
 [
    {
-      "name":"creid",
-      "value":"1704611014491416240",
-      "expires":"2037-12-31T23:55:55.000Z",
-      "domain":"zsz.ch",
-      "path":"/",
-      "httpOnly":true,
-      "sameSite":"Lax"
+      "name": "auth0.945be99e317ac7f635af87effd4ba9fb.is.authenticated",
+      "value": "true",
+      "domain": "profile.onelog.ch",
+      "path": "/",
+      "expires": 1646335682,
+      "size": 59,
+      "httpOnly": false,
+      "secure": true,
+      "session": false,
+      "sameSite": "None",
+      "sameParty": false,
+      "sourceScheme": "Secure",
+      "sourcePort": 443
    },
    {
-      "name":"cresid",
-      "value":"2840c0e4448b43cb783c3adc7fd9a707",
-      "expires":"2037-12-31T23:55:55.000Z",
-      "domain":".zsz.ch",
-      "path":"/",
-      "secure":true,
-      "httpOnly":true,
-      "sameSite":"None"
+      "name": "_legacy_auth0.945be99e317ac7f635af87effd4ba9fb.is.authenticated",
+      "value": "true",
+      "domain": "profile.onelog.ch",
+      "path": "/",
+      "expires": 1646335682,
+      "size": 67,
+      "httpOnly": false,
+      "secure": true,
+      "session": false,
+      "sameParty": false,
+      "sourceScheme": "Secure",
+      "sourcePort": 443
    }
 ]
 ```
@@ -85,8 +74,6 @@ There are some env variables that mus be set.
 
 `PORT`: Default `3000` the port the express server listens on
 
-`COOKIE_STORE_MAX_SIZE`: Default `15` Defines how many cookies will be cached in RAM and randomly reused
-
 `COOKIE_MAX_DAYS_AGE`: Default `5` Defines how many days cookies remain valid in the cache
 
 `POLL_FREQUENCY_MS`: Default `1000` Frequency in Millseconds for polling the confirmation email from RapidAPI
@@ -95,6 +82,9 @@ There are some env variables that mus be set.
 
 `SENTRY_DSN`: Default `false` DSN of your Sentry host. If not set, Sentry is not activated
 
+`CRON_COOKIE_FETCH_EXPR`: Default `"0 */8 * * *"` Cron expression at which CookieBakery tries to fetch new cookies
+
+`PUPPETEER_TIMOUT`: Default `10000` Puppeteer default timeout time
 # Run It
 
 1. Clone this repository `git clone https://github.com/jsalamander/BZCookieBakery.git`
