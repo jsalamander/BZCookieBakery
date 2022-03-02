@@ -11,7 +11,7 @@
 # BZCookieBakery
 Bake cookies which can be used to bypass the paywall of many Tamedia websites with the accompanying browser extensions.
 
-You'll find a list of the supported websites below
+All websites supported by OneLog can be found on their page https://consent.onelog.ch.
 
 This is the api for https://github.com/jsalamander/BZCookieBear
 

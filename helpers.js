@@ -208,7 +208,6 @@ async function popluateCookies() {
       emailCreds.email,
       emailCreds.password,
     );
-    console.log('cc', cookies);
     return filterCookies(cookies);
   } catch (error) {
     Sentry.captureException(error);
@@ -225,7 +224,6 @@ async function bakeCookies(cookieStore, log) {
     try {
       /* eslint-disable-next-line no-await-in-loop */
       const cookies = await popluateCookies();
-      console.log('cc2', cookies);
       const expiration = new Date();
       const cookieMaxDaysAge = parseInt(process.env.COOKIE_MAX_DAYS_AGE, 10) || 5;
       expiration.setTime(expiration.getTime() + cookieMaxDaysAge * 86400000);
