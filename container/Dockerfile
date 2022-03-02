@@ -1,7 +1,7 @@
 # https://javascript.plainenglish.io/build-a-production-ready-node-express-api-with-docker-9a45443427a0
 ARG PORT=3000
 
-FROM node:14-alpine AS node
+FROM node:16-alpine AS node
 
 
 # Builder stage

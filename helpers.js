@@ -6,7 +6,7 @@ const md5 = require('md5');
 const poll = require('easy-polling');
 const axios = require('axios');
 
-const puppeteerTimeout = parseInt(process.env.PUPPETEER_TIMOUT, 10) || 10000;
+const puppeteerTimeout = parseInt(process.env.PUPPETEER_TIMEOUT, 10) || 10000;
 const emailInputSelector = '#email';
 const nextBtnSelector = '#first-step-continue-btn';
 const passwordInputSelector = 'input[type=password]';
@@ -67,7 +67,7 @@ async function registerAccount(email, password) {
  * @returns
  */
 async function confirmAccount(confirmUrl, email, password) {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: process.env.NODE_ENV === 'production' });
   const page = await browser.newPage();
   page.setDefaultTimeout(puppeteerTimeout);
 

@@ -84,7 +84,7 @@ There are some env variables that mus be set.
 
 `CRON_COOKIE_FETCH_EXPR`: Default `"0 */8 * * *"` Cron expression at which CookieBakery tries to fetch new cookies
 
-`PUPPETEER_TIMOUT`: Default `10000` Puppeteer default timeout time
+`PUPPETEER_TIMEOUT`: Default `10000` Puppeteer default timeout time in ms
 # Run It
 
 1. Clone this repository `git clone https://github.com/jsalamander/BZCookieBakery.git`
