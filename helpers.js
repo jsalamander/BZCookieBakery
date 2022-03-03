@@ -7,6 +7,7 @@ const poll = require('easy-polling');
 const axios = require('axios');
 
 const puppeteerTimeout = parseInt(process.env.PUPPETEER_TIMEOUT, 10) || 10000;
+const puppeterDefaultOpts = { headless: process.env.NODE_ENV === 'production',args: ['--no-sandbox'] };
 const emailInputSelector = '#email';
 const nextBtnSelector = '#first-step-continue-btn';
 const passwordInputSelector = 'input[type=password]';
@@ -34,7 +35,7 @@ const requestOptions = {
  * @param {*} password
  */
 async function registerAccount(email, password) {
-  const browser = await puppeteer.launch({ headless: process.env.NODE_ENV === 'production' });
+  const browser = await puppeteer.launch(puppeterDefaultOpts);
   const page = await browser.newPage();
   page.setDefaultTimeout(puppeteerTimeout);
 
@@ -67,7 +68,7 @@ async function registerAccount(email, password) {
  * @returns
  */
 async function confirmAccount(confirmUrl, email, password) {
-  const browser = await puppeteer.launch({ headless: process.env.NODE_ENV === 'production' });
+  const browser = await puppeteer.launch(puppeterDefaultOpts);
   const page = await browser.newPage();
   page.setDefaultTimeout(puppeteerTimeout);
 
