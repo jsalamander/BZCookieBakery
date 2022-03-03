@@ -1,6 +1,6 @@
 README.md
 .gitignore
-container
+container/Dockerfile
 .github
 .eslintrc
 Procile

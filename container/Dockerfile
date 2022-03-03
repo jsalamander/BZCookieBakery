@@ -36,6 +36,14 @@ ENV NODE_ENV production
 # Update the system
 RUN apk --no-cache -U upgrade
 
+# Installs latest Chromium (92) package.
+RUN apk add --no-cache \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
 # Prepare destination directory and ensure user node owns it
 RUN mkdir -p /home/node/app/ && chown -R node:node /home/node/app
 
@@ -46,7 +54,7 @@ WORKDIR /home/node/app
 RUN npm i -g pm2
 
 # Copy package.json, package-lock.json and process.yml
-COPY package*.json ./container/process.yml ./
+COPY --chown=node:node package*.json ./container/process.yml ./
 
 # Switch to user node
 USER node
