@@ -1,7 +1,7 @@
 {
-  "name": "bz-cookie-eater",
-  "version": "1.0.0",
-  "description": "Get free BZ cookies",
+  "name": "bz-cookie-bakery",
+  "version": "2.0.0",
+  "description": "Get free Tamedia cookies",
   "main": "app.js",
   "dependencies": {
     "@sentry/node": "^6.12.0",
@@ -16,7 +16,8 @@
     "node-cron": "^3.0.0",
     "node-fetch": "^2.6.1",
     "puppeteer": "^13.4.0",
-    "simple-node-logger": "^21.8.12"
+    "simple-node-logger": "^21.8.12",
+    "user-agents": "^1.0.944"
   },
   "devDependencies": {
     "eslint": "^7.32.0",
@@ -30,6 +31,6 @@
   "author": "jsalamander",
   "license": "GPLv3",
   "engines": {
-    "node": "14.x"
+    "node": "16.x"
   }
 }

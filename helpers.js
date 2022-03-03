@@ -5,8 +5,19 @@ const Str = require('@supercharge/strings');
 const md5 = require('md5');
 const poll = require('easy-polling');
 const axios = require('axios');
+const UserAgent = require('user-agents');
+const log = require('./logger');
 
-const puppeteerTimeout = parseInt(process.env.PUPPETEER_TIMOUT, 10) || 10000;
+const puppeteerTimeout = parseInt(process.env.PUPPETEER_TIMEOUT, 10) || 10000;
+const puppeterDefaultOpts = {
+  headless: process.env.NODE_ENV === 'production',
+  args: [
+    '--disable-gpu',
+    '--disable-dev-shm-usage',
+    '--disable-setuid-sandbox',
+    '--no-sandbox',
+  ],
+};
 const emailInputSelector = '#email';
 const nextBtnSelector = '#first-step-continue-btn';
 const passwordInputSelector = 'input[type=password]';
@@ -27,6 +38,8 @@ const requestOptions = {
   },
 };
 
+const userAgent = new UserAgent();
+
 /**
  * register a new account using the provided credentials
  * The registration process will be done using puppeteer
@@ -34,31 +47,42 @@ const requestOptions = {
  * @param {*} password
  */
 async function registerAccount(email, password) {
-  const browser = await puppeteer.launch({ headless: process.env.NODE_ENV === 'production' });
+  log.debug('registering account for ', email);
+  const browser = await puppeteer.launch(puppeterDefaultOpts);
   const page = await browser.newPage();
   page.setDefaultTimeout(puppeteerTimeout);
+  const currUserAgent = userAgent.toString();
+  page.setUserAgent(currUserAgent);
+  log.debug('user agent register ', userAgent);
 
+  log.debug('go to ', profileUrl);
   await page.goto(profileUrl);
   await page.waitForSelector(emailInputSelector, visibleSelectorOption);
 
+  log.debug('type email ', profileUrl);
   await page.type(emailInputSelector, email);
 
   await page.waitForSelector(nextBtnSelector, visibleSelectorOption);
+
+  log.debug('proceed to password click');
   await Promise.all([
     page.waitForNavigation(),
     page.click(nextBtnSelector),
   ]);
 
+  log.debug('type password ', password);
   await page.waitForSelector(passwordInputSelector, visibleSelectorOption);
   await page.type(passwordInputSelector, password);
 
+  log.debug('submit password');
   await Promise.all([
     page.waitForNavigation(),
     page.click(submitPasswordBtnSelector),
   ]);
+
+  log.debug('registered account, closing browser ', puppeterDefaultOpts);
   await browser.close();
 }
-
 /**
  * Visit confirm url and login to receieve cookies
  * @param {*} confirmUrl
@@ -67,34 +91,45 @@ async function registerAccount(email, password) {
  * @returns
  */
 async function confirmAccount(confirmUrl, email, password) {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch(puppeterDefaultOpts);
   const page = await browser.newPage();
   page.setDefaultTimeout(puppeteerTimeout);
+  const currUserAgent = userAgent.toString();
+  page.setUserAgent(currUserAgent);
+  log.debug('user agent confirming ', currUserAgent);
 
+  log.debug('visit confirm url ', confirmUrl);
   await page.goto(confirmUrl);
+  log.debug('visit profile url ', confirmUrl);
   await page.goto(profileUrl);
 
+  log.debug('type email for login ', email);
   await page.waitForSelector(emailInputSelector, visibleSelectorOption);
   await page.type(emailInputSelector, email);
 
+  log.debug('proceed to password page for ', email);
   await Promise.all([
     page.waitForNavigation(),
     page.click(nextBtnSelector),
   ]);
 
+  log.debug('enter login password ', password);
   await page.waitForSelector(passwordInputSelector, visibleSelectorOption);
   await page.type(passwordInputSelector, password);
 
+  log.debug('submit login');
   await Promise.all([
     page.waitForNavigation(),
     page.click(submitLoginBtnSelector),
   ]);
 
+  log.debug('check if login successful');
   await page.waitForFunction(
     `document.querySelector("body").innerText.includes("${email}")`,
   );
 
   const cookies = await page.cookies();
+  log.debug('extracted cookies ', cookies);
   await browser.close();
   return cookies;
 }
@@ -112,6 +147,7 @@ async function getNewEmailAccount() {
       throw new Error('RapidAPI returned zero email domains');
     }
 
+    log.debug('available email domains ', domains);
     const tempEmailDomain = domains[Math.floor(Math.random() * domains.length)];
     const name = Math.random().toString(36).substr(2, 5);
     const email = name + tempEmailDomain;
@@ -156,6 +192,7 @@ async function receiveConfirmationEmail(email) {
   const emailText = confirmationEmails[0].mail_text;
   const urls = emailText.match(confirmUrlReg);
   if (urls.length > 0) {
+    log.debug('confirmation urls extracted ', urls);
     const confirmUrl = urls[0].replace('[', '').replace(']', '');
     return confirmUrl;
   }
@@ -215,7 +252,7 @@ async function popluateCookies() {
   }
 }
 
-async function bakeCookies(cookieStore, log) {
+async function bakeCookies(cookieStore) {
   const tmpCookieStore = { ...cookieStore };
   let triesCounter = 0;
   const maxRetries = parseInt(process.env.BAKERY_RETIRES, 10) || 3;

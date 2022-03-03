@@ -1,0 +1,11 @@
+version: '3'
+
+# used for testing the container image
+services:
+  bakery:
+    build:
+      context: .
+      dockerfile: container/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - BAKERY_LOG_LEVEL=debug
