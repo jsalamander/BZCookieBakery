@@ -2,4 +2,4 @@ apps:
     - name: bz-cookie-bakery
       script: ./app.js
       exec_mode: cluster
-      instances: max
+      instances: 1

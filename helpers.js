@@ -9,7 +9,15 @@ const UserAgent = require('user-agents');
 const log = require('./logger');
 
 const puppeteerTimeout = parseInt(process.env.PUPPETEER_TIMEOUT, 10) || 10000;
-const puppeterDefaultOpts = { headless: process.env.NODE_ENV === 'production', args: ['--no-sandbox', '--disable-dev-shm-usage'] };
+const puppeterDefaultOpts = {
+  headless: process.env.NODE_ENV === 'production',
+  args: [
+    '--disable-gpu',
+    '--disable-dev-shm-usage',
+    '--disable-setuid-sandbox',
+    '--no-sandbox',
+  ],
+};
 const emailInputSelector = '#email';
 const nextBtnSelector = '#first-step-continue-btn';
 const passwordInputSelector = 'input[type=password]';

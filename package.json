@@ -1,7 +1,7 @@
 {
-  "name": "bz-cookie-eater",
+  "name": "bz-cookie-bakery",
   "version": "2.0.0",
-  "description": "Get free BZ cookies",
+  "description": "Get free Tamedia cookies",
   "main": "app.js",
   "dependencies": {
     "@sentry/node": "^6.12.0",

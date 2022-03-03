@@ -4,3 +4,6 @@ container/Dockerfile
 .github
 .eslintrc
 Procile
+docker-compose.yml
+node_modules
+assets
