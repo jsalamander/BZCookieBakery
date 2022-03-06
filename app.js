@@ -15,11 +15,11 @@ if (process.env.SENTRY_DSN || false) {
   });
 }
 
-// global in memory cookie store
-let cookieStore = {};
+// global in memory credential store
+let credentialStore = {};
 
 cron.schedule(defaultCron, async () => {
-  cookieStore = await helpers.bakeCookies(cookieStore);
+  credentialStore = await helpers.bake(credentialStore);
 });
 
 const app = express();
@@ -29,22 +29,24 @@ const port = process.env.PORT || 3000;
 app.get('/', async (req, res) => {
   res.contentType('application/json');
   const todayStamp = Date.now();
-  cookieStore = Object.keys(cookieStore || {})
+  credentialStore = Object.keys(credentialStore || {})
     .filter((key) => key > todayStamp)
     .reduce((obj, key) => {
       /* eslint-disable-next-line no-param-reassign */
-      obj[key] = cookieStore[key];
+      obj[key] = credentialStore[key];
       return obj;
     }, {});
 
-  const cookieCandidates = Object.keys(cookieStore);
-  const randomCookieKey = cookieCandidates[Math.floor(Math.random() * cookieCandidates.length)];
-  res.json(cookieStore[randomCookieKey] || []);
+  const credentialCandidates = Object.keys(credentialStore);
+  const randomCredentialKey = credentialCandidates[
+    Math.floor(Math.random() * credentialCandidates.length)
+  ];
+  res.json(credentialStore[randomCredentialKey] || []);
 });
 
 app.listen(port, async () => {
   log.info(`BZCookieBakery taking orders at http://localhost:${port}`);
-  log.info('starting initial bakery cookie fetch jobs');
-  cookieStore = await helpers.bakeCookies(cookieStore);
-  log.debug('initial cookie store', cookieStore);
+  log.info('starting initial bakery job ');
+  credentialStore = await helpers.bake(credentialStore);
+  log.debug('initial credential store', credentialStore);
 });

@@ -26,9 +26,6 @@ const submitLoginBtnSelector = '#native-login-btn';
 const profileUrl = 'https://profile.onelog.ch/';
 const visibleSelectorOption = { visible: true };
 
-// Google analytics cookie name parts, we don't want to track
-const forbiddenCookienameParts = ['_gat', '_ga', '_gid'];
-
 const requestOptions = {
   method: 'GET',
   headers: {
@@ -127,11 +124,7 @@ async function confirmAccount(confirmUrl, email, password) {
   await page.waitForFunction(
     `document.querySelector("body").innerText.includes("${email}")`,
   );
-
-  const cookies = await page.cookies();
-  log.debug('extracted cookies ', cookies);
   await browser.close();
-  return cookies;
 }
 
 /**
@@ -200,19 +193,9 @@ async function receiveConfirmationEmail(email) {
 }
 
 /**
- * Filter out all nasty Goggle Analytics cookies
- * @param {*} cookies
+ * try to register and retrieve a valid onelog.ch account
  */
-function filterCookies(cookies) {
-  return cookies?.filter((cookie) => !forbiddenCookienameParts.some(
-    (forbiddenCookieNamePart) => cookie?.name.includes(forbiddenCookieNamePart),
-  ));
-}
-
-/**
- * try to register and retrieve a onelog.ch cookie
- */
-async function popluateCookies() {
+async function popluateCredentials() {
   let emailCreds = {};
   try {
     emailCreds = await getNewEmailAccount();
@@ -240,33 +223,34 @@ async function popluateCookies() {
   }
 
   try {
-    const cookies = await confirmAccount(
+    await confirmAccount(
       confirmUrl,
       emailCreds.email,
       emailCreds.password,
     );
-    return filterCookies(cookies);
+    log.debug('successfully created account ', emailCreds);
+    return emailCreds;
   } catch (error) {
     Sentry.captureException(error);
     throw new Error(`Unable to confirm  ${emailCreds.email}: `, error);
   }
 }
 
-async function bakeCookies(cookieStore) {
-  const tmpCookieStore = { ...cookieStore };
+async function bake(credentialStore) {
+  const tmpCredentialStore = { ...credentialStore };
   let triesCounter = 0;
   const maxRetries = parseInt(process.env.BAKERY_RETIRES, 10) || 3;
   while (triesCounter < maxRetries) {
     log.info(`bakery try #${triesCounter}`);
     try {
       /* eslint-disable-next-line no-await-in-loop */
-      const cookies = await popluateCookies();
+      const credentials = await popluateCredentials();
       const expiration = new Date();
       const cookieMaxDaysAge = parseInt(process.env.COOKIE_MAX_DAYS_AGE, 10) || 5;
       expiration.setTime(expiration.getTime() + cookieMaxDaysAge * 86400000);
-      tmpCookieStore[expiration.getTime()] = cookies;
-      log.info('successfully fetched account cookies');
-      return tmpCookieStore;
+      tmpCredentialStore[expiration.getTime()] = credentials;
+      log.info('successfully created an account for ', credentials.email);
+      return tmpCredentialStore;
     } catch (err) {
       log.warn(`Fetching cookies failed at try ${triesCounter} with ${err}`);
     }
@@ -275,5 +259,5 @@ async function bakeCookies(cookieStore) {
 }
 
 module.exports = {
-  bakeCookies,
+  bake,
 };
