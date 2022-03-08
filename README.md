@@ -9,7 +9,7 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/jfriedli/bz-cookie-bakery)
 
 # BZCookieBakery
-Bake cookies which can be used to bypass the paywall of many Tamedia websites with the accompanying browser extensions.
+Bake credentials which can be used to bypass the paywall of many OneLog supported news websites with the accompanying browser extensions.
 
 All websites supported by OneLog can be found on their page https://consent.onelog.ch.
 
@@ -23,43 +23,16 @@ A container image is availabe on [DockerHub](https://hub.docker.com/r/jfriedli/b
 
 Domain: https://www.bzcookie.fans/ (note due to Heroku and bad DNS provider only a subdomain works)
 
-### Cookie Endpoint
+### Credentials Endpoint
 **Path**: `/`
 **Method**: `GET` 
 
 **Example Response**
 ```json
-[
-   {
-      "name": "auth0.945be99e317ac7f635af87effd4ba9fb.is.authenticated",
-      "value": "true",
-      "domain": "profile.onelog.ch",
-      "path": "/",
-      "expires": 1646335682,
-      "size": 59,
-      "httpOnly": false,
-      "secure": true,
-      "session": false,
-      "sameSite": "None",
-      "sameParty": false,
-      "sourceScheme": "Secure",
-      "sourcePort": 443
-   },
-   {
-      "name": "_legacy_auth0.945be99e317ac7f635af87effd4ba9fb.is.authenticated",
-      "value": "true",
-      "domain": "profile.onelog.ch",
-      "path": "/",
-      "expires": 1646335682,
-      "size": 67,
-      "httpOnly": false,
-      "secure": true,
-      "session": false,
-      "sameParty": false,
-      "sourceScheme": "Secure",
-      "sourcePort": 443
-   }
-]
+{
+  "email": "wur2c@subcaro.com",
+  "password": "Aa1-xcxnGQwTW-jG2-xeJyH"
+}
 ```
 
 ## Configuration
