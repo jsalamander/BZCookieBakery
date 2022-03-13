@@ -15,12 +15,12 @@
     "md5": "^2.3.0",
     "node-cron": "^3.0.0",
     "node-fetch": "^2.6.1",
-    "puppeteer": "^13.4.0",
+    "puppeteer": "^13.5.1",
     "simple-node-logger": "^21.8.12",
     "user-agents": "^1.0.944"
   },
   "devDependencies": {
-    "eslint": "^7.32.0",
+    "eslint": "^8.11.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.24.2"
   },
