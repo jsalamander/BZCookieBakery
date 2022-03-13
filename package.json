@@ -4,8 +4,8 @@
   "description": "Get free Tamedia cookies",
   "main": "app.js",
   "dependencies": {
-    "@sentry/node": "^6.12.0",
-    "@sentry/tracing": "^6.12.0",
+    "@sentry/node": "^6.18.0",
+    "@sentry/tracing": "^6.18.0",
     "@supercharge/strings": "^1.25.0",
     "axios": "^0.21.4",
     "cors": "^2.8.5",
@@ -17,12 +17,12 @@
     "node-fetch": "^2.6.1",
     "puppeteer": "^13.5.1",
     "simple-node-logger": "^21.8.12",
-    "user-agents": "^1.0.944"
+    "user-agents": "^1.0.954"
   },
   "devDependencies": {
-    "eslint": "^8.10.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.24.2"
+    "eslint": "^8.11.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.4"
   },
   "scripts": {
     "start": "node app.js",
