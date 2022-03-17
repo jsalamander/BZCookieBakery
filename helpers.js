@@ -18,6 +18,8 @@ const puppeterDefaultOpts = {
     '--no-sandbox',
   ],
 };
+const cookieBannerSelector = '#onetrust-accept-btn-handler';
+const cookieBannerTimeout = parseInt(process.env.COOKIE_BANNER_TIMEOUT, 10) || 3000;
 const emailInputSelector = '#email';
 const nextBtnSelector = '#first-step-continue-btn';
 const passwordInputSelector = 'input[type=password]';
@@ -38,6 +40,25 @@ const requestOptions = {
 const userAgent = new UserAgent();
 
 /**
+ * Wait for cookie banner and accept all
+ * If not needed skip it
+ * @param {*} page
+ */
+async function acceptCookieBannerIfNeeded(page) {
+  try {
+    if (await page.waitForSelector(
+      cookieBannerSelector,
+      { timeout: cookieBannerTimeout },
+    )) {
+      log.warn('accepting all cookies ');
+      await page.click(cookieBannerSelector);
+    }
+  } catch (e) {
+    log.warn('Cookie banner not found ', e);
+  }
+}
+
+/**
  * register a new account using the provided credentials
  * The registration process will be done using puppeteer
  * @param {*} email
@@ -54,8 +75,10 @@ async function registerAccount(email, password) {
 
   log.debug('go to ', profileUrl);
   await page.goto(profileUrl);
-  await page.waitForSelector(emailInputSelector, visibleSelectorOption);
 
+  await acceptCookieBannerIfNeeded(page);
+
+  await page.waitForSelector(emailInputSelector, visibleSelectorOption);
   log.debug('type email ', profileUrl);
   await page.type(emailInputSelector, email);
 
@@ -99,6 +122,8 @@ async function confirmAccount(confirmUrl, email, password) {
   await page.goto(confirmUrl);
   log.debug('visit profile url ', confirmUrl);
   await page.goto(profileUrl);
+
+  await acceptCookieBannerIfNeeded(page);
 
   log.debug('type email for login ', email);
   await page.waitForSelector(emailInputSelector, visibleSelectorOption);

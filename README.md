@@ -60,6 +60,8 @@ There are some env variables that mus be set.
 
 `PUPPETEER_TIMEOUT`: Default `10000` Puppeteer default timeout time in ms
 
+`COOKIE_BANNER_TIMEOUT`: Default `3000` Timeout to wait for Cookie Banner (does not show up in Switzerland 👾)
+
 `BAKERY_LOG_LEVEL`: Default not set. Allows to define the log level as one from `trace, debug, info, warn, error and fatal (plus all and off)`.
 
 # Run It
