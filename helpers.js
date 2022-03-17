@@ -1,5 +1,4 @@
 const Sentry = require('@sentry/node');
-const fetch = require('node-fetch');
 const puppeteer = require('puppeteer');
 const Str = require('@supercharge/strings');
 const md5 = require('md5');
@@ -29,11 +28,9 @@ const profileUrl = 'https://profile.onelog.ch/';
 const visibleSelectorOption = { visible: true };
 
 const requestOptions = {
-  method: 'GET',
   headers: {
     'x-rapidapi-key': process.env.RAPID_API_KEY || 'NOT_SET_API-KEY',
     'x-rapidapi-host': 'privatix-temp-mail-v1.p.rapidapi.com',
-    useQueryString: true,
   },
 };
 
@@ -158,8 +155,8 @@ async function confirmAccount(confirmUrl, email, password) {
  */
 async function getNewEmailAccount() {
   try {
-    const domainResponse = await fetch('https://privatix-temp-mail-v1.p.rapidapi.com/request/domains/', requestOptions);
-    const domains = await domainResponse.json();
+    const domainResponse = await axios.get('https://privatix-temp-mail-v1.p.rapidapi.com/request/domains/', requestOptions);
+    const domains = domainResponse.data;
 
     if (domains.length <= 0) {
       throw new Error('RapidAPI returned zero email domains');
