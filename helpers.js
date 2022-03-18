@@ -18,6 +18,7 @@ const puppeterDefaultOpts = {
   ],
 };
 const cookieBannerSelector = '#onetrust-accept-btn-handler';
+const cookieBannerOverlaySelector = '.onetrust-pc-dark-filter';
 const cookieBannerTimeout = parseInt(process.env.COOKIE_BANNER_TIMEOUT, 10) || 3000;
 const emailInputSelector = '#email';
 const nextBtnSelector = '#first-step-continue-btn';
@@ -49,6 +50,7 @@ async function acceptCookieBannerIfNeeded(page) {
     )) {
       log.warn('accepting all cookies ');
       await page.click(cookieBannerSelector);
+      await page.waitForSelector(cookieBannerOverlaySelector, { hidden: true });
     }
   } catch (e) {
     log.warn('Cookie banner not found ', e);
@@ -117,6 +119,7 @@ async function confirmAccount(confirmUrl, email, password) {
 
   log.debug('visit confirm url ', confirmUrl);
   await page.goto(confirmUrl);
+
   log.debug('visit profile url ', confirmUrl);
   await page.goto(profileUrl);
 
