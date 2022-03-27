@@ -15,6 +15,7 @@ const puppeterDefaultOpts = {
     '--disable-dev-shm-usage',
     '--disable-setuid-sandbox',
     '--no-sandbox',
+    '--incognito',
   ],
 };
 const cookieBannerSelector = '#onetrust-accept-btn-handler';
@@ -24,7 +25,6 @@ const emailInputSelector = '#email';
 const nextBtnSelector = '#first-step-continue-btn';
 const passwordInputSelector = 'input[type=password]';
 const submitPasswordBtnSelector = '#native-register-btn';
-const submitLoginBtnSelector = '#native-login-btn';
 const profileUrl = 'https://profile.onelog.ch/';
 const visibleSelectorOption = { visible: true };
 
@@ -44,16 +44,17 @@ const userAgent = new UserAgent();
  */
 async function acceptCookieBannerIfNeeded(page) {
   try {
+    await page.waitForNavigation({ waitUntil: 'networkidle0' });
     if (await page.waitForSelector(
       cookieBannerSelector,
       { timeout: cookieBannerTimeout },
     )) {
-      log.warn('accepting all cookies ');
+      log.warn('cookie banner present - accepting all cookies');
       await page.click(cookieBannerSelector);
       await page.waitForSelector(cookieBannerOverlaySelector, { hidden: true });
     }
   } catch (e) {
-    log.warn('Cookie banner not found ', e);
+    log.debug('Cookie banner not found - skipping it');
   }
 }
 
@@ -63,9 +64,8 @@ async function acceptCookieBannerIfNeeded(page) {
  * @param {*} email
  * @param {*} password
  */
-async function registerAccount(email, password) {
+async function registerAccount(email, password, browser) {
   log.debug('registering account for ', email);
-  const browser = await puppeteer.launch(puppeterDefaultOpts);
   const page = await browser.newPage();
   page.setDefaultTimeout(puppeteerTimeout);
   const currUserAgent = userAgent.toString();
@@ -99,8 +99,8 @@ async function registerAccount(email, password) {
     page.click(submitPasswordBtnSelector),
   ]);
 
-  log.debug('registered account, closing browser ', puppeterDefaultOpts);
-  await browser.close();
+  log.debug('registered account');
+  await page.close();
 }
 /**
  * Visit confirm url and login to receieve cookies
@@ -109,8 +109,7 @@ async function registerAccount(email, password) {
  * @param {*} password
  * @returns
  */
-async function confirmAccount(confirmUrl, email, password) {
-  const browser = await puppeteer.launch(puppeterDefaultOpts);
+async function confirmAccount(confirmUrl, email, password, browser) {
   const page = await browser.newPage();
   page.setDefaultTimeout(puppeteerTimeout);
   const currUserAgent = userAgent.toString();
@@ -120,36 +119,14 @@ async function confirmAccount(confirmUrl, email, password) {
   log.debug('visit confirm url ', confirmUrl);
   await page.goto(confirmUrl);
 
-  log.debug('visit profile url ', confirmUrl);
+  log.debug('visit profile url ', profileUrl);
   await page.goto(profileUrl);
-
-  await acceptCookieBannerIfNeeded(page);
-
-  log.debug('type email for login ', email);
-  await page.waitForSelector(emailInputSelector, visibleSelectorOption);
-  await page.type(emailInputSelector, email);
-
-  log.debug('proceed to password page for ', email);
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click(nextBtnSelector),
-  ]);
-
-  log.debug('enter login password ', password);
-  await page.waitForSelector(passwordInputSelector, visibleSelectorOption);
-  await page.type(passwordInputSelector, password);
-
-  log.debug('submit login');
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click(submitLoginBtnSelector),
-  ]);
 
   log.debug('check if login successful');
   await page.waitForFunction(
     `document.querySelector("body").innerText.includes("${email}")`,
   );
-  await browser.close();
+  await page.close();
 }
 
 /**
@@ -220,7 +197,7 @@ async function receiveConfirmationEmail(email) {
 /**
  * try to register and retrieve a valid onelog.ch account
  */
-async function popluateCredentials() {
+async function popluateCredentials(browser) {
   let emailCreds = {};
   try {
     emailCreds = await getNewEmailAccount();
@@ -230,7 +207,7 @@ async function popluateCredentials() {
   }
 
   try {
-    await registerAccount(emailCreds.email, emailCreds.password);
+    await registerAccount(emailCreds.email, emailCreds.password, browser);
   } catch (error) {
     Sentry.captureException(error);
     throw new Error('failed registering account on onelog: ', error);
@@ -244,7 +221,7 @@ async function popluateCredentials() {
     }
   } catch (error) {
     Sentry.captureException(error);
-    throw new Error(`Unable to confirm  ${emailCreds.email}: `, error);
+    throw new Error(`Unable to receive confirm email for ${emailCreds.email}: `, error);
   }
 
   try {
@@ -252,12 +229,13 @@ async function popluateCredentials() {
       confirmUrl,
       emailCreds.email,
       emailCreds.password,
+      browser,
     );
     log.debug('successfully created account ', emailCreds);
     return emailCreds;
   } catch (error) {
     Sentry.captureException(error);
-    throw new Error(`Unable to confirm  ${emailCreds.email}: `, error);
+    throw new Error(`Unable to confirm ${emailCreds.email}: `, error);
   }
 }
 
@@ -267,9 +245,13 @@ async function bake(credentialStore) {
   const maxRetries = parseInt(process.env.BAKERY_RETIRES, 10) || 3;
   while (triesCounter < maxRetries) {
     log.info(`bakery try #${triesCounter}`);
+    /* eslint-disable-next-line no-await-in-loop */
+    const browser = await puppeteer.launch(puppeterDefaultOpts);
+    /* eslint-disable-next-line no-await-in-loop */
+    const context = await browser.createIncognitoBrowserContext();
     try {
       /* eslint-disable-next-line no-await-in-loop */
-      const credentials = await popluateCredentials();
+      const credentials = await popluateCredentials(context);
       const expiration = new Date();
       const cookieMaxDaysAge = parseInt(process.env.COOKIE_MAX_DAYS_AGE, 10) || 5;
       expiration.setTime(expiration.getTime() + cookieMaxDaysAge * 86400000);
@@ -278,6 +260,11 @@ async function bake(credentialStore) {
       return tmpCredentialStore;
     } catch (err) {
       log.warn(`Fetching cookies failed at try ${triesCounter} with ${err}`);
+    } finally {
+      /* eslint-disable-next-line no-await-in-loop */
+      await context.close();
+      /* eslint-disable-next-line no-await-in-loop */
+      await browser.close();
     }
     triesCounter += 1;
   }

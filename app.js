@@ -30,12 +30,19 @@ app.get('/', async (req, res) => {
   res.contentType('application/json');
   const todayStamp = Date.now();
   credentialStore = Object.keys(credentialStore || {})
-    .filter((key) => key > todayStamp)
+    .filter((key) => {
+      if (key > todayStamp) {
+        return true;
+      }
+      log.info(`Removed credential store entry with key ${key} at ${todayStamp}`);
+      return false;
+    })
     .reduce((obj, key) => {
       /* eslint-disable-next-line no-param-reassign */
       obj[key] = credentialStore[key];
       return obj;
     }, {});
+  log.info(`current store entries: ${Object.keys(credentialStore)}`);
 
   const credentialCandidates = Object.keys(credentialStore);
   const randomCredentialKey = credentialCandidates[
