@@ -13,7 +13,7 @@
     "express": "^4.17.1",
     "md5": "^2.3.0",
     "node-cron": "^3.0.0",
-    "puppeteer": "^13.5.1",
+    "puppeteer": "^14.3.0",
     "simple-node-logger": "^21.8.12",
     "user-agents": "^1.0.958"
   },
