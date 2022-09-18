@@ -91,6 +91,7 @@ async function registerAccount(email, password, browser) {
 
   log.debug('type password ', password);
   await page.waitForSelector(passwordInputSelector, visibleSelectorOption);
+  await page.waitForTimeout(2000);
   await page.type(passwordInputSelector, password);
 
   log.debug('submit password');
@@ -166,6 +167,7 @@ async function receiveConfirmationEmail(email) {
     try {
       return await axios.get(`https://privatix-temp-mail-v1.p.rapidapi.com/request/mail/id/${emailMd5}/`, requestOptions);
     } catch (error) {
+      log.error('unable to fetch emails for', email);
       Sentry.captureException(error);
       return null;
     }
