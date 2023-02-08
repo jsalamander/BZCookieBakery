@@ -15,7 +15,7 @@
     "node-cron": "^3.0.0",
     "puppeteer": "^13.5.1",
     "simple-node-logger": "^21.8.12",
-    "user-agents": "^1.0.958"
+    "user-agents": "^1.0.1285"
   },
   "devDependencies": {
     "eslint": "^8.11.0",
